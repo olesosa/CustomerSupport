@@ -11,10 +11,6 @@ namespace CustomerSupportData.DataAccess.Configurations
             builder
                 .HasKey(x => x.Id);
 
-            builder
-                .HasOne(t => t.Ticket)
-                .WithOne(t => t.Details)
-                .HasForeignKey<Ticket>(t => t.DetailsId);
         }
     }
 }
