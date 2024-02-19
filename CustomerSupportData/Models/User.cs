@@ -8,5 +8,8 @@
         public string RoleName { get; set; }
         public bool IsDeleted { get; set; }
         public List<Ticket> Tickets { get; set; }
+        public List<Ticket> AssignedTickets { get; set; }
+        public List<Message> Messages { get; set; }
+
     }
 }

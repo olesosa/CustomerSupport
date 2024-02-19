@@ -11,10 +11,6 @@ namespace CustomerSupportData.DataAccess.Configurations
         {
             builder.HasKey(x => x.Id);
 
-            builder
-                .HasOne(m => m.Message)
-                .WithMany(m => m.Attachments)
-                .HasForeignKey(m => m.MessageId);
         }
     }
 }
