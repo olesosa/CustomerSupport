@@ -1,14 +1,13 @@
-﻿using CS.DAL.DataAccess;
+﻿using CS.BL.Interfaces;
+using CS.DAL.DataAccess;
+using CS.DAL.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
 {
-    public class UserService
+    public class UserService : BaseService<User>, IUserService
     {
-        private readonly ApplicationContext _context;
-        public UserService()
-        {
-            _context = new ApplicationContext();
-        }
+        public UserService(ApplicationContext context) : base(context) { }
 
 
     }
