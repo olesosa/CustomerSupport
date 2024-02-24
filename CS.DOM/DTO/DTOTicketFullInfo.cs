@@ -9,6 +9,5 @@
         public string Topic { get; set; }
         public string Description { get; set; }
         public List<string> AttachmentsFilePath { get; set; }
-        public DateTime? WhenCreated { get; set; }
     }
 }
