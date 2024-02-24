@@ -3,9 +3,13 @@ using CS.DOM.DTO;
 
 namespace CS.BL.Interfaces
 {
-    public interface ITicketService : IBaseService<Ticket>
+    public interface ITicketService
     {
         Task<List<DTOTicketShortInfo>> GetAll();
-        new Task<DTOTicketFullInfo> GetById(Guid id);
+        Task<List<DTOTicketShortInfo>> GetAllUnAsssigned();
+        Task<DTOTicketFullInfo> GetById(Guid id);
+        Task<bool> Create(Ticket ticket);
+        Task<bool> Update(Ticket ticket);
+        Task<bool> Delete(Guid id);
     }
 }
