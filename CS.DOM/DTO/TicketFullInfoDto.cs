@@ -1,6 +1,6 @@
 ﻿namespace CS.DOM.DTO
 {
-    public class DTOTicketFullInfo
+    public class TicketFullInfoDto
     {
         public Guid Id { get; set; }
         public Guid CustomerId { get; set; }

@@ -4,6 +4,7 @@ using CS.DAL.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CS.DAL.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20240226164718_MinorUserChanges")]
+    partial class MinorUserChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,9 +127,6 @@ namespace CS.DAL.Migrations
                     b.Property<bool>("IsAssigned")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsSolved")
-                        .HasColumnType("bit");
-
                     b.Property<string>("RequestType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -195,6 +194,9 @@ namespace CS.DAL.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("RoleName")
                         .IsRequired()
