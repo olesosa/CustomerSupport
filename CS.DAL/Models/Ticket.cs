@@ -8,6 +8,7 @@
         public User? Admin { get; set; }
         public string RequestType { get; set; }
         public bool IsAssigned { get; set; }
+        public bool IsSolved { get; set; }
         public Guid DetailsId { get; set; }
         public TicketDetails Details { get; set; }
         public List<TicketAttachment> Attachments { get; set; }

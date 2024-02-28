@@ -6,6 +6,10 @@ namespace CS.DAL.DataAccess
 {
     public class ApplicationContext : DbContext
     {
+        public ApplicationContext() { }
+        public ApplicationContext(DbContextOptions<ApplicationContext> options)
+            : base(options) { }
+
         public DbSet<User> Users { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketAttachment> TicketAttachments { get; set; }
@@ -15,11 +19,6 @@ namespace CS.DAL.DataAccess
         public DbSet<MessageAttachment> MessageAttachments { get; set; }
         public DbSet<MessageDetails> MessageDetails { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Server=localhost\\MSSQLSERVER01;Database=CustomerSupportDb;Trusted_Connection=True;");
-            base.OnConfiguring(optionsBuilder);
-        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new UserConfiguration());

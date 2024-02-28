@@ -1,86 +1,88 @@
-﻿using CS.BL.Interfaces;
+﻿using AutoMapper;
+using CS.BL.Helpers;
+using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
 
 namespace CS.BL.Services
 {
-    public class TicketService : BaseService, ITicketService
+    public class TicketService : ITicketService
     {
-        public TicketService(ApplicationContext context) : base(context) { }
-
-        public async Task<bool> Create(Ticket ticket)
+        readonly ApplicationContext _context;
+        readonly IMapper _mapper;
+        readonly ICustomMapper _customMapper;
+        public TicketService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
         {
-            await _context.Tickets.AddAsync(ticket);
+            _context = context;
+            _mapper = mapper;
+            _customMapper = customMapper;
+        }
+        private async Task<bool> SaveAsync()
+        {
+            var saved = await _context.SaveChangesAsync();
 
+            return saved > 0 ? true : false;
+        }
+
+        public async Task<bool> Create(TicketCreateDto ticketDto)
+        {
+            var ticket = _customMapper.MapToTicket(ticketDto);
+
+            await _context.AddAsync(ticket);
+                
             return await SaveAsync();
         }
 
         public async Task<bool> Delete(Guid id)
         {
-            _context.Tickets.Remove(await _context.Tickets.FirstOrDefaultAsync(u => u.Id == id));
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (ticket != null)
+            {
+                _context.Tickets.Remove(ticket);
+            }
 
             return await SaveAsync();
         }
 
-        public async Task<DTOTicketFullInfo?> GetById(Guid id)
+        public async Task<List<TicketShortInfoDto>> GetAll()
+        {
+            return await _context.Tickets
+                .Include(t => t.Details)
+                .Select(t => _customMapper.MapToTicketShortInfo(t))
+                .ToListAsync();
+        }
+
+        public async Task<List<TicketShortInfoDto>> GetAllUnAsssigned()
+        {
+            return await _context.Tickets
+                .Include(t => t.Details)
+                .Where(t => !t.IsAssigned)
+                .Select(t => _customMapper.MapToTicketShortInfo(t))
+                .ToListAsync();
+        }
+
+        public async Task<TicketFullInfoDto?> GetById(Guid id)
         {
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
                 .Include(t => t.Attachments)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
-            return new DTOTicketFullInfo()
-            {
-                Id = ticket.Id,
-                CustomerId = ticket.CustomerId,
-                RequestType = ticket.RequestType,
-                IsAssigned = ticket.IsAssigned,
-                Topic = ticket.Details.Topic,
-                Description = ticket.Details.Description,
-                WhenCreated = ticket.Details.WhenCreated,
-                AttachmentsFilePath = ticket.Attachments
-                .Select(t => t.FilePath).ToList(),
-            };
+            return _customMapper.MapToTicketFullInfo(ticket);
         }
 
-        public async Task<bool> Update(Ticket ticket)
+        public async Task<bool> Update(TicketUpdateDto ticketDto)
         {
+            var ticket = _customMapper.MapUpdateTicket(ticketDto);
+
             _context.Tickets.Update(ticket);
 
             return await SaveAsync();
         }
-        public async Task<List<DTOTicketShortInfo>> GetAll()
-        {
-            return await _context.Tickets
-                .Include(t => t.Details)
-                .Select(t =>
-                new DTOTicketShortInfo()
-                {
-                    Id = t.Id,
-                    CustomerId = t.CustomerId,
-                    RequestType = t.RequestType,
-                    IsAssigned = t.IsAssigned,
-                    Topic = t.Details.Topic,
-                })
-                .ToListAsync();
-        }
-        public async Task<List<DTOTicketShortInfo>> GetAllUnAsssigned()
-        {
-            return await _context.Tickets
-                .Include(t => t.Details)
-                .Where(t => t.IsAssigned == false)
-                .Select(t =>
-                new DTOTicketShortInfo()
-                {
-                    Id = t.Id,
-                    CustomerId = t.CustomerId,
-                    RequestType = t.RequestType,
-                    IsAssigned = t.IsAssigned,
-                    Topic = t.Details.Topic,
-                })
-                .ToListAsync();
-        }
+
     }
 }

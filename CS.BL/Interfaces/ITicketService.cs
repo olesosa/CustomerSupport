@@ -5,11 +5,11 @@ namespace CS.BL.Interfaces
 {
     public interface ITicketService
     {
-        Task<List<DTOTicketShortInfo>> GetAll();
-        Task<List<DTOTicketShortInfo>> GetAllUnAsssigned();
-        Task<DTOTicketFullInfo> GetById(Guid id);
-        Task<bool> Create(Ticket ticket);
-        Task<bool> Update(Ticket ticket);
-        Task<bool> Delete(Guid id);
+        Task<List<TicketShortInfoDto>> GetAll();
+        Task<List<TicketShortInfoDto>> GetAllUnAsssigned();
+        Task<TicketFullInfoDto?> GetById(Guid ticketId);
+        Task<bool> Create(TicketCreateDto ticketDto);
+        Task<bool> Update(TicketUpdateDto ticketDto);
+        Task<bool> Delete(Guid ticketId);
     }
 }
