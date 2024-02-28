@@ -15,4 +15,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CS.DOM\CS.DOM.csproj" />
+  </ItemGroup>
+
 </Project>
