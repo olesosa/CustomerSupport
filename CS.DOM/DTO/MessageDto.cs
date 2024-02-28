@@ -1,6 +1,6 @@
 ﻿namespace CS.DOM.DTO
 {
-    public class DTOMessage
+    public class MessageDto
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }

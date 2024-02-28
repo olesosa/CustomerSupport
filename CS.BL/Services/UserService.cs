@@ -1,14 +1,29 @@
-﻿using CS.BL.Interfaces;
+﻿using AutoMapper;
+using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
 {
-    public class UserService : BaseService, IUserService
+    public class UserService : IUserService
     {
-        public UserService(ApplicationContext context) : base(context) { }
-        public Task<bool> Create(User user) // need to be implemented
+        readonly ApplicationContext _context;
+        readonly IMapper _mapper;
+        public UserService(ApplicationContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+        }
+        private async Task<bool> SaveAsync()
+        {
+            var saved = await _context.SaveChangesAsync();
+
+            return saved > 0 ? true : false;
+        }
+
+        // TODO: need to be implemented
+        public Task<bool> Create(User user)
         {
             throw new NotImplementedException();
         }
