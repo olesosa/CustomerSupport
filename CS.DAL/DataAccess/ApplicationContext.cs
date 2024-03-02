@@ -17,7 +17,6 @@ namespace CS.DAL.DataAccess
         public DbSet<Dialog> Dialogs { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<MessageAttachment> MessageAttachments { get; set; }
-        public DbSet<MessageDetails> MessageDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,7 +27,6 @@ namespace CS.DAL.DataAccess
             modelBuilder.ApplyConfiguration(new DialogConfiguration());
             modelBuilder.ApplyConfiguration(new MessageConfiguration());
             modelBuilder.ApplyConfiguration(new MessageAttachmentConfiguration());
-            modelBuilder.ApplyConfiguration(new MessageDetailsConfiguration());
             base.OnModelCreating(modelBuilder);
         }
     }

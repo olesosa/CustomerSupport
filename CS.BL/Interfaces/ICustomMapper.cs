@@ -8,7 +8,6 @@ namespace CS.BL.Interfaces
         TicketFullInfoDto MapToTicketFullInfo(Ticket ticket);
         TicketShortInfoDto MapToTicketShortInfo(Ticket ticket);
         Ticket MapToTicket(TicketCreateDto ticketDto);
-        TicketAttachment MapToTicketAttachment(TicketAttachmentDto attachmentDto);
-        Ticket MapUpdateTicket(TicketUpdateDto ticketUpdateDto);
+        MessageDto MapToMessageDto(Message message);
     }
 }

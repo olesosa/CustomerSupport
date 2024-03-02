@@ -8,11 +8,6 @@ namespace CS.DAL.DataAccess.Configurations
         public override void Configure(EntityTypeBuilder<Message> builder)
         {
             builder
-                .HasOne(m => m.Details)
-                .WithOne(m => m.Message)
-                .HasForeignKey<Message>(m => m.DetailsId);
-
-            builder
                 .HasMany(m=>m.Attachments)
                 .WithOne(m=>m.Message)
                 .HasForeignKey(m=>m.MessageId);

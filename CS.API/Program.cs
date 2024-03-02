@@ -2,7 +2,9 @@ using CS.BL.Helpers;
 using CS.BL.Interfaces;
 using CS.BL.Services;
 using CS.DAL.DataAccess;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CS.Api
 {
@@ -38,6 +40,33 @@ namespace CS.Api
                 });
             });
 
+
+            //builder.Services.AddAuthentication(options =>
+            //{
+            //    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            //    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            //    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            //})
+            //    .AddJwtBearer(options =>
+            //    {
+            //        options.RequireHttpsMetadata = false;
+            //        options.SaveToken = true;
+            //        options.TokenValidationParameters = new TokenValidationParameters
+            //        {
+            //            ValidateIssuer = true,
+            //            ValidIssuer = builder.Configuration["Auth:Issuer"],
+
+            //            ValidateAudience = true,
+            //            ValidAudience = builder.Configuration["Auth:Audience"],
+
+            //            ValidateLifetime = true,
+
+            //            ValidateIssuerSigningKey = true,
+            //            ClockSkew = TimeSpan.Zero,
+            //            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Auth:SecretKey"])),
+            //        };
+            //    });
+
             var app = builder.Build();
 
 
@@ -51,6 +80,7 @@ namespace CS.Api
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
