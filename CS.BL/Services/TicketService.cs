@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
+using CS.API.Filters;
 using CS.BL.Helpers;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Headers;
 
 namespace CS.BL.Services
 {
@@ -20,6 +20,7 @@ namespace CS.BL.Services
             _mapper = mapper;
             _customMapper = customMapper;
         }
+
         private async Task<bool> SaveAsync()
         {
             var saved = await _context.SaveChangesAsync();
@@ -36,9 +37,9 @@ namespace CS.BL.Services
             return await SaveAsync();
         }
 
-        public async Task<bool> Delete(Guid id)
+        public async Task<bool> Delete(Guid id, CancellationToken cancellationToken = default)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(u => u.Id == id);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
             if (ticket != null)
             {
@@ -48,38 +49,54 @@ namespace CS.BL.Services
             return await SaveAsync();
         }
 
-        public async Task<List<TicketShortInfoDto>> GetAll()
+        public async Task<List<TicketShortInfoDto>> GetAll(TicketFilter filter, CancellationToken cancellationToken = default)
         {
             return await _context.Tickets
                 .Include(t => t.Details)
+                .Where(t => t.IsAssigned == filter.IsAssigned)
                 .Select(t => _customMapper.MapToTicketShortInfo(t))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<TicketShortInfoDto>> GetAllUnAsssigned()
-        {
-            return await _context.Tickets
-                .Include(t => t.Details)
-                .Where(t => !t.IsAssigned)
-                .Select(t => _customMapper.MapToTicketShortInfo(t))
-                .ToListAsync();
-        }
-
-        public async Task<TicketFullInfoDto?> GetById(Guid id)
+        public async Task<TicketFullInfoDto?> GetById(Guid id, CancellationToken cancellationToken = default)
         {
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
                 .Include(t => t.Attachments)
-                .FirstOrDefaultAsync(t => t.Id == id);
+                .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
             return _customMapper.MapToTicketFullInfo(ticket);
         }
 
         public async Task<bool> Update(TicketUpdateDto ticketDto)
         {
-            var ticket = _customMapper.MapUpdateTicket(ticketDto);
+            var ticket = _mapper.Map<Ticket>(ticketDto);
 
-            _context.Tickets.Update(ticket);
+            if(ticket != null)
+                _context.Tickets.Update(ticket);
+
+            return await SaveAsync();
+        }
+        public async Task<bool> AssignTicket(Guid ticketId, Guid adminId, CancellationToken cancellationToken = default)
+        {
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
+
+            if(ticket != null)
+            {
+                ticket.AdminId = adminId;
+            }
+
+            return await SaveAsync();
+        }
+
+        public async Task<bool> UnAssignTicket(Guid ticketId, CancellationToken cancellationToken = default)
+        {
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
+
+            if (ticket != null)
+            {
+                ticket.AdminId = null;
+            }
 
             return await SaveAsync();
         }

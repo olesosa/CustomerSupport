@@ -1,4 +1,5 @@
-﻿using CS.BL.Helpers;
+﻿using AutoMapper;
+using CS.BL.Helpers;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
@@ -9,11 +10,13 @@ namespace CS.BL.Services
     public class AttachmentService : IAttachmentService
     {
         readonly ApplicationContext _context;
+        readonly IMapper _mapper;
         readonly ICustomMapper _customMapper;
 
-        public AttachmentService(ApplicationContext context, ICustomMapper customMapper)
+        public AttachmentService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
         {
             _context = context;
+            _mapper = mapper;
             _customMapper = customMapper;
         }
 
@@ -26,7 +29,7 @@ namespace CS.BL.Services
 
         public async Task<bool> AddAttachment(TicketAttachmentDto attachmentDto)
         {
-            var attachment = _customMapper.MapToTicketAttachment(attachmentDto);
+            var attachment = _mapper.Map<TicketAttachment>(attachmentDto);
 
             if (attachment != null) 
             {
@@ -39,7 +42,7 @@ namespace CS.BL.Services
         public async Task<bool> AddAttachment(List<TicketAttachmentDto> attachmentDtos)
         {
             List<TicketAttachment> attachments = attachmentDtos
-                .Select(a => _customMapper.MapToTicketAttachment(a))
+                .Select(a => _mapper.Map<TicketAttachment>(attachmentDtos))
                 .ToList();
 
             if (attachments != null)

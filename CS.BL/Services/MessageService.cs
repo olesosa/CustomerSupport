@@ -11,11 +11,13 @@ namespace CS.BL.Services
     {
         readonly ApplicationContext _context;
         readonly IMapper _mapper;
+        readonly ICustomMapper _customMapper;
 
-        public MessageService(ApplicationContext context, IMapper mapper)
+        public MessageService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
         {
             _context = context;
             _mapper = mapper;
+            _customMapper = customMapper;
         }
         private async Task<bool> SaveAsync()
         {
@@ -38,48 +40,29 @@ namespace CS.BL.Services
             if (message != null)
             {
                 _context.Messages.Remove(message);
-
             }
 
             return await SaveAsync();
 
         }
 
-        public async Task<List<MessageDto>?> GetAllByDialogId(Guid dialogId)
+        public async Task<List<MessageDto>?> GetAllByDialogId(Guid dialogId, CancellationToken cancellationToken = default)
         {
-            return await _context.Messages
-                .Include(u => u.Details)
+            var messages = await _context.Messages
                 .Include(u => u.Attachments)
                 .Where(m => m.DialogId == dialogId)
-                .Select(m => new MessageDto()
-                {
-                    Id = m.Id,
-                    IsRead = m.IsRead,
-                    MessageText = m.MessageText,
-                    UserId = m.UserId,
-                    WhenSended = m.Details.WhenCreated,
-                    FilePath = m.Attachments
-                    .Select(m => m.FilePath).ToList(),
-                }).ToListAsync();
+                .ToListAsync(cancellationToken);
+
+            return messages.Select(m => _customMapper.MapToMessageDto(m)).ToList();
         }
 
-        public async Task<MessageDto?> GetById(Guid id)
+        public async Task<MessageDto?> GetById(Guid id, CancellationToken cancellationToken = default)
         {
             var message = await _context.Messages
-                .Include(m => m.Details)
                 .Include(m => m.Attachments)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
-            return new MessageDto()
-            {
-                Id = message.Id,
-                IsRead = message.IsRead,
-                MessageText = message.MessageText,
-                UserId = message.UserId,
-                WhenSended = message.Details.WhenCreated,
-                FilePath = message.Attachments
-                .Select(m => m.FilePath).ToList(),
-            };
+            return _customMapper.MapToMessageDto(message);
         }
 
         public async Task<bool> Update(Message message)
