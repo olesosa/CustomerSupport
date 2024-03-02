@@ -17,8 +17,8 @@ namespace CS.API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost]
-        public async Task<IActionResult> CreateDialog([FromBody] DialogDto dialog) 
+        [HttpPost("{ticketId:Guid}")]
+        public async Task<IActionResult> CreateDialog([FromRoute] Guid ticketId) // use token
         {
             return Ok();
         }

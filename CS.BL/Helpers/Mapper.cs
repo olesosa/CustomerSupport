@@ -8,23 +8,11 @@ namespace CS.BL.Helpers
     {
         public Mapper() 
         {
-            CreateMap<Ticket, TicketFullInfoDto>();
-            CreateMap<TicketFullInfoDto, Ticket>();
+            CreateMap<TicketAttachment, TicketAttachmentDto>();
+            CreateMap<TicketAttachmentDto, TicketAttachment>();
 
-            CreateMap<Ticket, TicketShortInfoDto>();
-            CreateMap<TicketShortInfoDto, Ticket>();
-
-            CreateMap<TicketAttachment, TicketFullInfoDto>();
-            CreateMap<TicketFullInfoDto, TicketAttachment>();
-
-            CreateMap<TicketDetails, TicketShortInfoDto>();
-            CreateMap<TicketShortInfoDto, TicketDetails>();
-
-            CreateMap<Dialog, DialogDto>();
-            CreateMap<DialogDto, Dialog>();
-
-            CreateMap<Message, MessageDto>();
-            CreateMap<MessageDto, Message>();
+            CreateMap<Ticket, TicketUpdateDto>();
+            CreateMap<TicketUpdateDto, Ticket>();
 
         }
     }

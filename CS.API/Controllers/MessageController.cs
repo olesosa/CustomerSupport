@@ -17,7 +17,7 @@ namespace CS.API.Controllers
         }
 
         [HttpGet("{dialogId:Guid}")]
-        public async Task<IActionResult> GetAllDialogMessages([FromRoute] Guid dialogId) 
+        public async Task<IActionResult> GetAll([FromRoute] Guid dialogId) 
         {
             return Ok();
         }

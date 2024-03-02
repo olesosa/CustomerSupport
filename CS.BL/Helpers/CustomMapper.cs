@@ -49,24 +49,17 @@ namespace CS.BL.Helpers
             };
         }
 
-        public TicketAttachment MapToTicketAttachment(TicketAttachmentDto attachmentDto)
+        public MessageDto MapToMessageDto(Message message)
         {
-            return new TicketAttachment()
+            return new MessageDto()
             {
-                Id = attachmentDto.Id,
-                FilePath = attachmentDto.FilePath,
-                TicketId = attachmentDto.TicketId,
-            };
-        }
-
-        public Ticket MapUpdateTicket(TicketUpdateDto ticketUpdateDto)
-        {
-            return new Ticket()
-            {
-                Id = ticketUpdateDto.Id,
-                IsAssigned = ticketUpdateDto.IsAssigned,
-                IsSolved = ticketUpdateDto.IsSolved,
-                RequestType = ticketUpdateDto.RequestType,
+                Id = message.Id,
+                IsRead = message.IsRead,
+                MessageText = message.MessageText,
+                UserId = message.UserId,
+                WhenSended = message.WhenSend,
+                FilePath = message.Attachments
+                .Select(m => m.FilePath).ToList(),
             };
         }
     }
