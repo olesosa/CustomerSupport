@@ -26,26 +26,6 @@ namespace CS.BL.Services
             return saved > 0 ? true : false;
         }
 
-        public async Task<bool> Create(Message message)
-        {
-            await _context.Messages.AddAsync(message);
-
-            return await SaveAsync();
-        }
-
-        public async Task<bool> Delete(Guid id)
-        {
-            var message = await _context.Messages.FirstOrDefaultAsync(u => u.Id == id);
-
-            if (message != null)
-            {
-                _context.Messages.Remove(message);
-            }
-
-            return await SaveAsync();
-
-        }
-
         public async Task<List<MessageDto>?> GetAllByDialogId(Guid dialogId, CancellationToken cancellationToken = default)
         {
             var messages = await _context.Messages
@@ -65,12 +45,16 @@ namespace CS.BL.Services
             return _customMapper.MapToMessageDto(message);
         }
 
-        public async Task<bool> Update(Message message)
+        public async Task<bool> SendMessage(SendMessageDto messageDto)
         {
-            _context.Messages.Update(message);
+            var message = _mapper.Map<Message>(messageDto);
+
+            if (message != null)
+            {
+                await _context.Messages.AddAsync(message);
+            }
 
             return await SaveAsync();
         }
-
     }
 }

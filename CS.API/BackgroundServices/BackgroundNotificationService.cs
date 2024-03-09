@@ -4,12 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CS.Api.BackgroundServices;
 
-public class BackgroundDialogService : BackgroundService
+public class BackgroundNotificationService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    //private readonly IEmailService _emailService;
 
-    public BackgroundDialogService(IServiceScopeFactory scopeFactory)
+    public BackgroundNotificationService(IServiceScopeFactory scopeFactory)
     {
         _scopeFactory = scopeFactory;
     }
@@ -18,16 +17,18 @@ public class BackgroundDialogService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await CheckIgnoredMessages();
+            await CheckUnReadMessages();
+            await CheckNewTickets();
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 
-    private async Task CheckIgnoredMessages()
+    private async Task CheckUnReadMessages()
     {
         using var scope = _scopeFactory.CreateScope();
-                
+
         var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
 
         var messages = await context.Messages
             .Include(m => m.User)
@@ -35,6 +36,23 @@ public class BackgroundDialogService : BackgroundService
             .Where(t => t.WhenSend.AddMinutes(5) < DateTime.Now)
             .ToListAsync();
 
-        // TODO send email
+        var tasks = messages.Select(emailService.SendEmail);
+        await Task.WhenAll(tasks);
+    }
+
+    public async Task CheckNewTickets()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+        var tickets = await context.Tickets
+            .Include(t => t.Details)
+            .Where(t => t.IsAssigned && t.Details.CreationTime.AddMinutes(1) < DateTime.Now)
+            .ToListAsync();
+
+        var tasks = tickets.Select(emailService.SendEmail);
+        await Task.WhenAll(tasks);
     }
 }

@@ -1,31 +1,66 @@
 ﻿using CS.BL.Interfaces;
+using CS.BL.Services;
 using CS.DOM.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CS.API.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class MessageController : ControllerBase
     {
-        readonly IMessageService _messageService;
+        private readonly IMessageService _messageService;
 
         public MessageController(IMessageService messageService)
         {
             _messageService = messageService;
         }
 
-        [HttpGet("{dialogId:Guid}")]
-        public async Task<IActionResult> GetAll([FromRoute] Guid dialogId) 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("Messages/{dialogId:Guid}")]
+        public async Task<IActionResult> GetAll([FromRoute] Guid dialogId, CancellationToken cancellationToken)
         {
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                Guid.TryParse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
+
+                var messages = _messageService.GetAllByDialogId(dialogId, cancellationToken);
+
+                if(messages == null)
+                {
+                    return NotFound("No messages in dialog yet");
+                }
+
+                return Ok(messages);
+            }
+            catch { }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SendMessage([FromBody] MessageDto message)
+        [Authorize]
+        [HttpPost("SendMessage")]
+        public async Task<IActionResult> SendMessage([FromBody] SendMessageDto message)
         {
-            return Ok();
+            if(!ModelState.IsValid) 
+                return BadRequest(ModelState);
+
+            if(await _messageService.SendMessage(message))
+            {
+                return Ok("Message has been sent");
+            }
+            else
+            {
+                return BadRequest();
+            }
         }
     }
 }

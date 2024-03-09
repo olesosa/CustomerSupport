@@ -33,13 +33,13 @@ namespace CS.BL.Services
             var ticket = _customMapper.MapToTicket(ticketDto);
 
             await _context.AddAsync(ticket);
-                
+
             return await SaveAsync();
         }
 
-        public async Task<bool> Delete(Guid id, CancellationToken cancellationToken = default)
+        public async Task<bool> Delete(Guid id)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(u => u.Id == id);
 
             if (ticket != null)
             {
@@ -58,7 +58,7 @@ namespace CS.BL.Services
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<TicketFullInfoDto?> GetById(Guid id, CancellationToken cancellationToken = default)
+        public async Task<TicketFullInfoDto?> GetFullInfoById(Guid id, CancellationToken cancellationToken = default)
         {
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
@@ -68,20 +68,11 @@ namespace CS.BL.Services
             return _customMapper.MapToTicketFullInfo(ticket);
         }
 
-        public async Task<bool> Update(TicketUpdateDto ticketDto)
+        public async Task<bool> AssignTicket(Guid ticketId, Guid adminId)
         {
-            var ticket = _mapper.Map<Ticket>(ticketDto);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId);
 
-            if(ticket != null)
-                _context.Tickets.Update(ticket);
-
-            return await SaveAsync();
-        }
-        public async Task<bool> AssignTicket(Guid ticketId, Guid adminId, CancellationToken cancellationToken = default)
-        {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
-
-            if(ticket != null)
+            if (ticket != null)
             {
                 ticket.AdminId = adminId;
             }
@@ -89,9 +80,9 @@ namespace CS.BL.Services
             return await SaveAsync();
         }
 
-        public async Task<bool> UnAssignTicket(Guid ticketId, CancellationToken cancellationToken = default)
+        public async Task<bool> UnAssignTicket(Guid ticketId)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId);
 
             if (ticket != null)
             {
@@ -99,6 +90,20 @@ namespace CS.BL.Services
             }
 
             return await SaveAsync();
+        }
+
+        public async Task<bool> IsTicketExist(Guid ticketId)
+        {
+            var result = await _context.Tickets.AnyAsync(t => t.Id == ticketId);
+
+            return result;
+        }
+
+        public async Task<Ticket?> GetById(Guid ticketId, CancellationToken cancellationToken = default)
+        {
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
+
+            return ticket;
         }
 
     }

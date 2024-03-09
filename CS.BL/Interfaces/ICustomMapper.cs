@@ -9,5 +9,6 @@ namespace CS.BL.Interfaces
         TicketShortInfoDto MapToTicketShortInfo(Ticket ticket);
         Ticket MapToTicket(TicketCreateDto ticketDto);
         MessageDto MapToMessageDto(Message message);
+        DialogCreateDto MapDialogCreate(Dialog dialog, Ticket ticket);
     }
 }
