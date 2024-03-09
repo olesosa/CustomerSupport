@@ -32,18 +32,6 @@ namespace CS.BL.Services
             return saved > 0 ? true : false;
         }
 
-        public async Task<bool> Delete(Guid id, CancellationToken cancellationToken = default)
-        {
-            var dialog = await _context.Dialogs.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
-
-            if (dialog != null)
-            {
-                _context.Dialogs.Remove(dialog);
-            }
-
-            return await SaveAsync();
-        }
-
         public async Task<DialogDto?> GetById(Guid id, CancellationToken cancellationToken = default)
         {
             var dialog = await _context.Dialogs
@@ -57,21 +45,28 @@ namespace CS.BL.Services
                 Id = dialog.Id,
                 CustomerId = dialog.Ticket.CustomerId,
                 AdminId = dialog.Ticket.AdminId,
-                Ticket = await _ticketService.GetById(dialog.Ticket.Id, cancellationToken),
+                Ticket = await _ticketService.GetFullInfoById(dialog.Ticket.Id, cancellationToken),
                 Messages = await _messageService.GetAllByDialogId(dialog.Id, cancellationToken),
             };
         }
 
-        public async Task<bool> Update(Dialog dialog)
+        public async Task<DialogCreateDto> Create(Guid ticketId, Guid adminId)
         {
-            _context.Dialogs.Update(dialog);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId);
 
-            return await SaveAsync();
-        }
+            if (ticket == null)
+            {
+                throw new Exception("Invalid ticket id, can not create dialog");
+            }
+            
+            ticket.AdminId = adminId;
 
-        public Task<bool> Create(DialogCreateDto dialogDto)
-        {
-            throw new NotImplementedException();
+            var dialog = new Dialog()
+            {
+                TicketId = ticket.Id,
+            };
+
+            return _customMapper.MapDialogCreate(dialog, ticket);
         }
     }
 }

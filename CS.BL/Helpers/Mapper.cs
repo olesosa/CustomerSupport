@@ -14,6 +14,12 @@ namespace CS.BL.Helpers
             CreateMap<Ticket, TicketUpdateDto>();
             CreateMap<TicketUpdateDto, Ticket>();
 
+            CreateMap<User, UserSignUpDto>();
+            CreateMap<UserSignUpDto, User>();
+
+            CreateMap<SendMessageDto, Message>();
+            CreateMap<Message, SendMessageDto>();
+
         }
     }
 }

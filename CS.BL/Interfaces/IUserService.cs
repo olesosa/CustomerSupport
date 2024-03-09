@@ -1,12 +1,13 @@
 ﻿using CS.DAL.Models;
+using CS.DOM.DTO;
+using System.Diagnostics;
 
 namespace CS.BL.Interfaces
 {
     public interface IUserService
     {
-        Task<User?> GetById(Guid id);
-        Task<bool> Create(User user);
-        Task<bool> Update(User user);
-        Task<bool> Delete(Guid id);
+        Task<User?> GetById(Guid userId, CancellationToken cancellationToken = default);
+        Task<bool> Create(UserSignUpDto userSignUpDto);
+        Task<bool> DoEmailExist(string email);
     }
 }

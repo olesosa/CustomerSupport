@@ -8,20 +8,19 @@ using System.Security.Claims;
 
 namespace CS.API.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class TicketController : ControllerBase
     {
-        readonly ITicketService _ticketService;
+        private readonly ITicketService _ticketService;
 
         public TicketController(ITicketService ticketService)
         {
             _ticketService = ticketService;
         }
 
-
         [Authorize(Roles = "Admin")]
-        [HttpPost]
+        [HttpPost("Tickets")]
         public async Task<IActionResult> GetAll([FromBody] TicketFilter filter, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -31,7 +30,7 @@ namespace CS.API.Controllers
 
             var tickets = await _ticketService.GetAll(filter, cancellationToken);
 
-            if (tickets != null) 
+            if (tickets != null)
             {
                 return Ok(tickets);
             }
@@ -42,101 +41,80 @@ namespace CS.API.Controllers
         }
 
         [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> CreateTicket([FromBody]TicketCreateDto ticket)
+        [HttpPost("Create")]
+        public async Task<IActionResult> Create([FromBody] TicketCreateDto ticket)
         {
-            if(!ModelState.IsValid)
-            {
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            }
 
             if (await _ticketService.Create(ticket))
             {
-                return Ok();
+                return Ok("Ticket was created");
             }
-            else 
-            { 
-                return BadRequest("Ticket can not be created"); 
+            else
+            {
+                return BadRequest("Ticket can not be created");
             }
         }
-
-        [Authorize(Roles = "Admin")]
-        [HttpPut("{ticketId:Guid}")]
-        public async Task<IActionResult> AssignTicket([FromRoute] Guid ticketId)
+        
+        [Authorize]
+        [HttpDelete("{ticketId:Guid}")]
+        public async Task<IActionResult> DeleteTicket([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var Id = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            Guid adminId;
-
-            if (Guid.TryParse(Id, out adminId))
+            if (await _ticketService.Delete(ticketId))
             {
-                return BadRequest("Id is not valid");
-            }
-            else if(await _ticketService.AssignTicket(ticketId, adminId))
-            {
-                return Ok();
+                return Ok("Ticket was successfully deleted");
             }
             else
             {
-                return NotFound("Invalid ticket id");
+                return NotFound("Your ticket can not be deleted");
             }
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("{ticketId:Guid}")]
-        public async Task<IActionResult> UnAssignTicket([FromRoute] Guid ticketId)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if(await _ticketService.UnAssignTicket(ticketId))
-            {
-                return Ok();
-            }
-            else
-            {
-                return NotFound("Invalid ticket id");
-            }
-
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpPut]
-        public async Task<IActionResult> ReAssignTicket([FromBody] AssignTicketDto ticketDto)
+        [HttpPatch("Assign/{ticketId:Guid}")]
+        public async Task<IActionResult> AssignTicket([FromBody] AssignTicketDto ticketDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             if (await _ticketService.AssignTicket(ticketDto.ticketId, ticketDto.adminId))
             {
-                return Ok();
+                return Ok("Ticket has been assigned");
             }
             else
             {
-                return NotFound("Invalid information");
+                return NotFound("Invalid ticket id");
             }
         }
 
-        [Authorize]
-        [HttpPut("{ticketId:Guid}")]
-        public async Task<IActionResult> DeleteTicket([FromRoute] Guid ticketId)
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("UnAssign/{ticketId:Guid}")]
+        public async Task<IActionResult> UnAssign([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if(await _ticketService.Delete(ticketId))
+            if (await _ticketService.UnAssignTicket(ticketId))
             {
-                return Ok("Ticket was successfully deleted");
+                return Ok("Ticket has been assigned");
             }
             else
             {
-                return NotFound("Your ticket not be found");
+                return NotFound("Invalid ticket id");
             }
+        }
+        
+        [Authorize]
+        [HttpPatch("Attachment")]
+        public async Task<IActionResult> AddAttachment([FromBody] TicketAttachmentDto attachmentDto)
+        {
+            return Ok();
         }
     }
 }

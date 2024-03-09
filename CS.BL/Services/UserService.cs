@@ -2,6 +2,7 @@
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
+using CS.DOM.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
@@ -10,11 +11,13 @@ namespace CS.BL.Services
     {
         readonly ApplicationContext _context;
         readonly IMapper _mapper;
+
         public UserService(ApplicationContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
         }
+
         private async Task<bool> SaveAsync()
         {
             var saved = await _context.SaveChangesAsync();
@@ -22,25 +25,35 @@ namespace CS.BL.Services
             return saved > 0 ? true : false;
         }
 
-        // TODO: need to be implemented
-        public Task<bool> Create(User user)
+        public async Task<bool> DoEmailExist(string email)
         {
-            throw new NotImplementedException();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        public Task<bool> Delete(Guid id)
+        public async Task<bool> Create(UserSignUpDto userSignUpDto)
         {
-            throw new NotImplementedException();
+            var user = _mapper.Map<User>(userSignUpDto);
+
+            if (user != null)
+            {
+                await _context.AddAsync(user);
+            }
+
+            return await SaveAsync();
         }
 
-        public Task<User?> GetById(Guid id)
+        public async Task<User?> GetById(Guid userId, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> Update(User user)
-        {
-            throw new NotImplementedException();
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         }
     }
 }

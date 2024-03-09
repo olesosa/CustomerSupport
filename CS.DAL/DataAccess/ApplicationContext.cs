@@ -1,6 +1,7 @@
 ﻿using CS.DAL.DataAccess.Configurations;
 using CS.DAL.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CS.DAL.DataAccess
 {
@@ -10,7 +11,7 @@ namespace CS.DAL.DataAccess
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options) { }
 
-        public DbSet<User> Users { get; set; }
+        public virtual DbSet<User> Users { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketAttachment> TicketAttachments { get; set; }
         public DbSet<TicketDetails> TicketDetails { get; set; }
