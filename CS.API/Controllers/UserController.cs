@@ -1,16 +1,16 @@
 ﻿using CS.BL.Interfaces;
-using CS.BL.Services;
+using CS.DOM.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace CS.API.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
-        readonly IUserService _userSevice;
+        private readonly IUserService _userSevice;
 
         public UserController(IUserService userSevice)
         {
@@ -18,19 +18,43 @@ namespace CS.API.Controllers
         }
 
         [Authorize]
-        [HttpPost]
+        [HttpPost("SignUp")]
         public async Task<IActionResult> SignUp()
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
-            var userRole = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+            try
+            {
+                Guid.TryParse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
+                var userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
+                var userRole = HttpContext.User.FindFirstValue(ClaimTypes.Role);
 
-            return Ok();
+                var userDto = new UserSignUpDto()
+                {
+                    Id = userId,
+                    Email = userEmail,
+                    RoleName = userRole,
+                };
+
+                if (!await _userSevice.DoEmailExist(userEmail))
+                {
+                    return BadRequest("User already exist");
+                }
+                if (await _userSevice.Create(userDto))
+                {
+                    return Ok("User was created");
+                }
+                else
+                {
+                    return BadRequest("Somth went wrong");
+                }
+            }
+            catch { }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 }

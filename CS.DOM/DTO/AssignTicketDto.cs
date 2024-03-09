@@ -1,4 +1,6 @@
-﻿namespace CS.DOM.DTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CS.DOM.DTO
 {
     public class AssignTicketDto
     {

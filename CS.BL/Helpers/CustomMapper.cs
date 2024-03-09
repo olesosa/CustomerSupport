@@ -16,7 +16,7 @@ namespace CS.BL.Helpers
                 IsAssigned = ticket.IsAssigned,
                 Topic = ticket.Details.Topic,
                 Description = ticket.Details.Description,
-                WhenCreated = ticket.Details.WhenCreated,
+                WhenCreated = ticket.Details.CreationTime,
                 AttachmentsFilePath = ticket.Attachments
                 .Select(t => t.FilePath).ToList(),
             };
@@ -40,11 +40,12 @@ namespace CS.BL.Helpers
             {
                 Id = ticketDto.Id,
                 CustomerId = ticketDto.CustomerId,
+                RequestType = ticketDto.RequestType,
                 Details = new TicketDetails()
                 {
                     Topic = ticketDto.Topic,
                     Description = ticketDto.Description,
-                    WhenCreated = ticketDto.WhenCreated,
+                    CreationTime = ticketDto.CreationTime,
                 },
             };
         }
@@ -60,6 +61,16 @@ namespace CS.BL.Helpers
                 WhenSended = message.WhenSend,
                 FilePath = message.Attachments
                 .Select(m => m.FilePath).ToList(),
+            };
+        }
+
+        public DialogCreateDto MapDialogCreate(Dialog dialog, Ticket ticket)
+        {
+            return new DialogCreateDto()
+            {
+                TicketId = dialog.TicketId,
+                CustomerId = ticket.CustomerId,
+                AdminId = ticket.AdminId,
             };
         }
     }

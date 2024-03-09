@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using CS.API.Helpers;
 using CS.BL.Helpers;
 using CS.BL.Interfaces;
 using CS.BL.Services;
@@ -5,87 +7,118 @@ using CS.DAL.DataAccess;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using CS.Api.BackgroundServices;
+using CS.API.Helpers.Validators;
+using FluentValidation;
 
-namespace CS.Api
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IDialogService, DialogService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<ICustomMapper, CustomMapper>();
+builder.Services.AddScoped<DataSeeder>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddHostedService<BackgroundNotificationService>();
+builder.Services.AddValidatorsFromAssemblyContaining<AssignTicketDtoValidators>();
+builder.Services.AddValidatorsFromAssemblyContaining<TicketAttachmentDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SendMessageDtoValidators>();
+            
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<ApplicationContext>(options =>
 {
-    public class Program
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DbString"));
+    //options.UseSqlServer(b => b.MigrationsAssembly("CS.API"));
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowMyOrigins", policy =>
     {
-        public static void Main(string[] args)
+        policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy =>
+    {
+        policy.RequireRole("Admin");
+        policy.RequireClaim("RoleName");
+    });
+    options.AddPolicy("User", policy =>
+    {
+        policy.RequireRole("User");
+        policy.RequireClaim("RoleName");
+    });
+});
+
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            var builder = WebApplication.CreateBuilder(args);
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Auth:Issuer"],
 
-            builder.Services.AddControllers();
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<ITicketService, TicketService>();
-            builder.Services.AddScoped<IDialogService, DialogService>();
-            builder.Services.AddScoped<IMessageService, MessageService>();
-            builder.Services.AddScoped<ICustomMapper, CustomMapper>();
-            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Auth:Audience"],
 
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            ValidateLifetime = true,
 
-            builder.Services.AddDbContext<ApplicationContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DbString"));
-            });
+            ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.Zero,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Auth:SecretKey"])),
+        };
+    });
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(name: "AllowMyOrigins", policy =>
-                {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
-            });
+var app = builder.Build();
 
+if (args.Length == 1 && args[0].ToLower() == "seeddata")
+    SeedData(app);
 
-            //builder.Services.AddAuthentication(options =>
-            //{
-            //    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            //    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            //    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            //})
-            //    .AddJwtBearer(options =>
-            //    {
-            //        options.RequireHttpsMetadata = false;
-            //        options.SaveToken = true;
-            //        options.TokenValidationParameters = new TokenValidationParameters
-            //        {
-            //            ValidateIssuer = true,
-            //            ValidIssuer = builder.Configuration["Auth:Issuer"],
+void SeedData(IHost app)
+{
+    var scopedFactory = app.Services.GetService<IServiceScopeFactory>();
 
-            //            ValidateAudience = true,
-            //            ValidAudience = builder.Configuration["Auth:Audience"],
-
-            //            ValidateLifetime = true,
-
-            //            ValidateIssuerSigningKey = true,
-            //            ClockSkew = TimeSpan.Zero,
-            //            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Auth:SecretKey"])),
-            //        };
-            //    });
-
-            var app = builder.Build();
-
-
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseCors("AllowMyOrigins");
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.MapControllers();
-
-            app.Run();
-        }
+    using (var scope = scopedFactory.CreateScope())
+    {
+        var service = scope.ServiceProvider.GetService<DataSeeder>();
+        service.SeedAllData();
     }
 }
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseCors("AllowMyOrigins");
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

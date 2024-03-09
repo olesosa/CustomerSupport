@@ -8,8 +8,7 @@
         public User User { get; set; }
         public Guid DialogId { get; set; }
         public Dialog Dialog { get; set; }
-        public Guid DetailsId {  get; set; }
-        public DateTime? WhenSend { get; set; }
+        public DateTime WhenSend { get; set; }
         public List<MessageAttachment> Attachments { get; set; }
     }
 }
