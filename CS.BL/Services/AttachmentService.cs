@@ -1,23 +1,19 @@
-﻿using AutoMapper;
-using CS.BL.Helpers;
-using CS.BL.Interfaces;
+﻿using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
-using CS.DOM.DTO;
+using CS.DOM.Helpers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace CS.BL.Services
 {
     public class AttachmentService : IAttachmentService
     {
-        readonly ApplicationContext _context;
-        readonly IMapper _mapper;
-        readonly ICustomMapper _customMapper;
+        private readonly ApplicationContext _context;
 
-        public AttachmentService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
+        public AttachmentService(ApplicationContext context)
         {
             _context = context;
-            _mapper = mapper;
-            _customMapper = customMapper;
         }
 
         private async Task<bool> SaveAsync()
@@ -27,30 +23,39 @@ namespace CS.BL.Services
             return saved > 0 ? true : false;
         }
 
-        public async Task<bool> AddAttachment(TicketAttachmentDto attachmentDto)
+        public async Task<string> AddAttachment(IFormFile file, Guid guid)
         {
-            var attachment = _mapper.Map<TicketAttachment>(attachmentDto);
+            var path = GenerateFilePath(file, guid.ToString());
+                
+            var stream = new FileStream(path, FileMode.Create);
 
-            if (attachment != null) 
+            await file.CopyToAsync(stream);
+            
+            await _context.TicketAttachments.AddAsync(new TicketAttachment()
             {
-                await _context.TicketAttachments.AddAsync(attachment);
-            }
+                TicketId = guid,
+                FilePath = path,
+            });
 
-            return await SaveAsync();
+            await _context.SaveChangesAsync();
+
+            return path;
         }
 
-        public async Task<bool> AddAttachment(List<TicketAttachmentDto> attachmentDtos)
+        private string GenerateFilePath(IFormFile file, string name)
         {
-            List<TicketAttachment> attachments = attachmentDtos
-                .Select(a => _mapper.Map<TicketAttachment>(attachmentDtos))
-                .ToList();
+            var extension = "." + file.FileName.Split('.')[file.FileName.Split('.').Length - 1];
 
-            if (attachments != null)
+            string fileName = name + extension;
+
+            var pathBuilt = Path.Combine(Directory.GetCurrentDirectory(), "Upload\\files");
+
+            if (!Directory.Exists(pathBuilt))
             {
-                await _context.TicketAttachments.AddRangeAsync(attachments);
+                Directory.CreateDirectory(pathBuilt);
             }
 
-            return await SaveAsync();
+            return Path.Combine(Directory.GetCurrentDirectory(), "Upload\\files", fileName);
         }
     }
 }

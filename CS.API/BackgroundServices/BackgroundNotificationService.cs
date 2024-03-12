@@ -17,8 +17,8 @@ public class BackgroundNotificationService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await CheckUnReadMessages();
-            await CheckNewTickets();
+            //await CheckUnReadMessages();
+            //await CheckNewTickets();
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }

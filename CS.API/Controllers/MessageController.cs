@@ -13,10 +13,12 @@ namespace CS.API.Controllers
     public class MessageController : ControllerBase
     {
         private readonly IMessageService _messageService;
+        private readonly IAttachmentService _attachmentService;
 
-        public MessageController(IMessageService messageService)
+        public MessageController(IMessageService messageService, IAttachmentService attachmentService)
         {
             _messageService = messageService;
+            _attachmentService = attachmentService;
         }
 
         [Authorize(Roles = "Admin")]
@@ -28,39 +30,41 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                Guid.TryParse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-                var messages = _messageService.GetAllByDialogId(dialogId, cancellationToken);
+            var messages = _messageService.GetAllByDialogId(dialogId, cancellationToken);
 
-                if(messages == null)
-                {
-                    return NotFound("No messages in dialog yet");
-                }
-
-                return Ok(messages);
-            }
-            catch { }
-
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Ok(messages);
         }
 
         [Authorize]
         [HttpPost("SendMessage")]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageDto message)
         {
-            if(!ModelState.IsValid) 
+            if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState);
+            }
 
-            if(await _messageService.SendMessage(message))
+            var senderId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var createdMessage = await _messageService.SendMessage(message, senderId);
+                
+            return Ok(createdMessage);
+        }
+
+        [Authorize]
+        [HttpPost("Attachment/{messageId:Guid}")]
+        public async Task<IActionResult> AddTicketAttachment([FromForm] IFormFile file, [FromRoute] Guid messageId)
+        {
+            if (!ModelState.IsValid)
             {
-                return Ok("Message has been sent");
+                return BadRequest(ModelState);
             }
-            else
-            {
-                return BadRequest();
-            }
+
+            var filePath= await _attachmentService.AddAttachment(file, messageId);
+            
+            return Ok(filePath);
         }
     }
 }

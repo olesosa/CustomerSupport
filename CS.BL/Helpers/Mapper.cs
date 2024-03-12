@@ -6,11 +6,11 @@ namespace CS.BL.Helpers
 {
     public class Mapper : Profile
     {
-        public Mapper() 
+        public Mapper()
         {
-            CreateMap<TicketAttachment, TicketAttachmentDto>();
-            CreateMap<TicketAttachmentDto, TicketAttachment>();
-
+            CreateMap<TicketShortInfoDto, Ticket>();
+            CreateMap<Ticket, TicketShortInfoDto>();
+            
             CreateMap<Ticket, TicketUpdateDto>();
             CreateMap<TicketUpdateDto, Ticket>();
 
@@ -20,6 +20,8 @@ namespace CS.BL.Helpers
             CreateMap<SendMessageDto, Message>();
             CreateMap<Message, SendMessageDto>();
 
+            CreateMap<TicketShortInfoDto, TicketCreateDto>();
+            CreateMap<TicketCreateDto, TicketShortInfoDto>();
         }
     }
 }

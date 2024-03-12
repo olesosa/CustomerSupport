@@ -27,7 +27,7 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            Guid.TryParse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid adminId);
+            var adminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             if (!await _ticketService.IsTicketExist(ticketId))
             {
@@ -35,11 +35,6 @@ namespace CS.API.Controllers
             }
 
             var dialog = _dialogService.Create(ticketId, adminId);
-
-            if (dialog == null)
-            {
-                return BadRequest("Can not create dialog");
-            }
 
             return Ok(dialog);
         }

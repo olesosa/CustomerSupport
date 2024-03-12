@@ -13,24 +13,14 @@ namespace CS.BL.Helpers
                 Id = ticket.Id,
                 CustomerId = ticket.CustomerId,
                 RequestType = ticket.RequestType,
+                Topic = ticket.Topic,
                 IsAssigned = ticket.IsAssigned,
-                Topic = ticket.Details.Topic,
                 Description = ticket.Details.Description,
-                WhenCreated = ticket.Details.CreationTime,
+                IsClosed =ticket.Details.IsClosed,
+                IsSolved = ticket.Details.IsSolved,
+                CreationTime = ticket.Details.CreationTime,
                 AttachmentsFilePath = ticket.Attachments
                 .Select(t => t.FilePath).ToList(),
-            };
-        }
-
-        public TicketShortInfoDto MapToTicketShortInfo(Ticket ticket)
-        {
-            return new TicketShortInfoDto()
-            {
-                Id = ticket.Id,
-                CustomerId = ticket.CustomerId,
-                RequestType = ticket.RequestType,
-                IsAssigned = ticket.IsAssigned,
-                Topic = ticket.Details.Topic,
             };
         }
 
@@ -38,14 +28,15 @@ namespace CS.BL.Helpers
         {
             return new Ticket()
             {
-                Id = ticketDto.Id,
-                CustomerId = ticketDto.CustomerId,
                 RequestType = ticketDto.RequestType,
+                Topic = ticketDto.Topic,
+                IsAssigned = false,
                 Details = new TicketDetails()
                 {
-                    Topic = ticketDto.Topic,
                     Description = ticketDto.Description,
                     CreationTime = ticketDto.CreationTime,
+                    IsSolved = false,
+                    IsClosed = false,
                 },
             };
         }
@@ -71,6 +62,16 @@ namespace CS.BL.Helpers
                 TicketId = dialog.TicketId,
                 CustomerId = ticket.CustomerId,
                 AdminId = ticket.AdminId,
+            };
+        }
+
+        public DetailsPatchDto MapDetails(Ticket ticket)
+        {
+            return new DetailsPatchDto()
+            {
+                TicketId = ticket.Id,
+                IsSolved = ticket.Details.IsSolved,
+                IsClosed = ticket.Details.IsClosed,
             };
         }
     }

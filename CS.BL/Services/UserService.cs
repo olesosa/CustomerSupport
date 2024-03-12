@@ -9,8 +9,8 @@ namespace CS.BL.Services
 {
     public class UserService : IUserService
     {
-        readonly ApplicationContext _context;
-        readonly IMapper _mapper;
+        private readonly ApplicationContext _context;
+        private readonly IMapper _mapper;
 
         public UserService(ApplicationContext context, IMapper mapper)
         {
