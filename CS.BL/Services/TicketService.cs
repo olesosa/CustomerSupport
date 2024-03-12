@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using CS.API.Filters;
 using CS.BL.Helpers;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
@@ -11,9 +10,9 @@ namespace CS.BL.Services
 {
     public class TicketService : ITicketService
     {
-        readonly ApplicationContext _context;
-        readonly IMapper _mapper;
-        readonly ICustomMapper _customMapper;
+        private readonly ApplicationContext _context;
+        private readonly IMapper _mapper;
+        private readonly ICustomMapper _customMapper;
         public TicketService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
         {
             _context = context;
@@ -27,14 +26,27 @@ namespace CS.BL.Services
 
             return saved > 0 ? true : false;
         }
+        
+        private async Task<Ticket?> GetById(Guid ticketId, CancellationToken cancellationToken = default)
+        {
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-        public async Task<bool> Create(TicketCreateDto ticketDto)
+            return ticket;
+        }
+
+        public async Task<TicketShortInfoDto> Create(TicketCreateDto ticketDto, Guid userId)
         {
             var ticket = _customMapper.MapToTicket(ticketDto);
 
+            ticket.CustomerId = userId;
+            
             await _context.AddAsync(ticket);
 
-            return await SaveAsync();
+            await _context.SaveChangesAsync();
+
+            var createdTicket = await GetById(ticket.Id);
+
+            return _mapper.Map<TicketShortInfoDto>(createdTicket);
         }
 
         public async Task<bool> Delete(Guid id)
@@ -54,7 +66,7 @@ namespace CS.BL.Services
             return await _context.Tickets
                 .Include(t => t.Details)
                 .Where(t => t.IsAssigned == filter.IsAssigned)
-                .Select(t => _customMapper.MapToTicketShortInfo(t))
+                .Select(t => _mapper.Map<TicketShortInfoDto>(t))
                 .ToListAsync(cancellationToken);
         }
 
@@ -75,6 +87,8 @@ namespace CS.BL.Services
             if (ticket != null)
             {
                 ticket.AdminId = adminId;
+                ticket.IsAssigned = true;
+                ticket.AssignmentTime = DateTime.Now;
             }
 
             return await SaveAsync();
@@ -87,6 +101,8 @@ namespace CS.BL.Services
             if (ticket != null)
             {
                 ticket.AdminId = null;
+                ticket.IsAssigned = false;
+                ticket.AssignmentTime = null;
             }
 
             return await SaveAsync();
@@ -99,12 +115,7 @@ namespace CS.BL.Services
             return result;
         }
 
-        public async Task<Ticket?> GetById(Guid ticketId, CancellationToken cancellationToken = default)
-        {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-            return ticket;
-        }
 
     }
 }

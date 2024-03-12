@@ -21,6 +21,7 @@ namespace CS.API.Helpers
             SeedDialogs();
             SeedMessages();
             SeedMessageAttachments();
+            SeedDialogsWithMessages();
         }
 
         public void SeedUsers()
@@ -45,17 +46,17 @@ namespace CS.API.Helpers
         {
             if (!_context.TicketDetails.Any())
             {
-                var details = new List<TicketDetails>()
-                {
-                    new TicketDetails()
-                        { Topic = "Ticket Topic 1", Description = "Ticket Description 1", CreationTime = DateTime.Now },
-                    new TicketDetails()
-                        { Topic = "Ticket Topic 2", Description = "Ticket Description 2", CreationTime = DateTime.Now },
-                    new TicketDetails()
-                        { Topic = "Ticket Topic 3", Description = "Ticket Description 3", CreationTime = DateTime.Now },
-                };
+                // var details = new List<TicketDetails>()
+                // {
+                //     new TicketDetails()
+                //         { Topic = "Ticket Topic 1", Description = "Ticket Description 1", CreationTime = DateTime.Now },
+                //     new TicketDetails()
+                //         { Topic = "Ticket Topic 2", Description = "Ticket Description 2", CreationTime = DateTime.Now },
+                //     new TicketDetails()
+                //         { Topic = "Ticket Topic 3", Description = "Ticket Description 3", CreationTime = DateTime.Now },
+                // };
 
-                _context.TicketDetails.AddRange(details);
+                //_context.TicketDetails.AddRange(details);
                 _context.SaveChanges();
             }
         }
@@ -66,26 +67,26 @@ namespace CS.API.Helpers
             {
                 var tickets = new List<Ticket>()
                 {
-                    new Ticket()
-                    {
-                        CustomerId = _context.Users.FirstOrDefault(u => u.Email == "userEmail1@email.com").Id,
-                        AdminId = _context.Users.FirstOrDefault(a => a.Email == "adminEmail1@email.com").Id,
-                        DetailsId = _context.TicketDetails.FirstOrDefault(d => d.Topic == "Ticket Topic 1").Id,
-                        RequestType = "Request 1",
-                        IsAssigned = true,
-                        IsClosed = false,
-                        IsSolved = false,
-                    },
+                    // new Ticket()
+                    // {
+                    //     CustomerId = _context.Users.FirstOrDefault(u => u.Email == "userEmail1@email.com").Id,
+                    //     AdminId = _context.Users.FirstOrDefault(a => a.Email == "adminEmail1@email.com").Id,
+                    //     DetailsId = _context.TicketDetails.FirstOrDefault(d => d.Topic == "Ticket Topic 1").Id,
+                    //     RequestType = "Request 1",
+                    //     IsAssigned = true,
+                    //     IsClosed = false,
+                    //     IsSolved = false,
+                    // },
 
-                    new Ticket()
-                    {
-                        CustomerId = _context.Users.FirstOrDefault(u => u.Email == "userEmail2@email.com").Id,
-                        DetailsId = _context.TicketDetails.FirstOrDefault(d => d.Topic == "Ticket Topic 2").Id,
-                        RequestType = "Request 2",
-                        IsAssigned = false,
-                        IsClosed = false,
-                        IsSolved = false,
-                    }
+                    // new Ticket()
+                    // {
+                    //     CustomerId = _context.Users.FirstOrDefault(u => u.Email == "userEmail2@email.com").Id,
+                    //     DetailsId = _context.TicketDetails.FirstOrDefault(d => d.Topic == "Ticket Topic 2").Id,
+                    //     RequestType = "Request 2",
+                    //     IsAssigned = false,
+                    //     IsClosed = false,
+                    //     IsSolved = false,
+                    // }
                 };
 
                 _context.Tickets.AddRange(tickets);
@@ -190,7 +191,7 @@ namespace CS.API.Helpers
 
         public void SeedDialogsWithMessages()
         {
-            if (!_context.Dialogs.Any())
+            if (_context.Dialogs.FirstOrDefault(d=> d.Ticket.RequestType == "Request 1") != null)
             {
                 var dialogs = new List<Dialog>()
                 {

@@ -7,14 +7,6 @@ public class TicketCreateDtoValidator : AbstractValidator<TicketCreateDto>
 {
     public TicketCreateDtoValidator()
     {
-        RuleFor(t => t.Id)
-            .NotNull()
-            .WithMessage("Id is required");
-        
-        RuleFor(t => t.CustomerId)
-            .NotNull()
-            .WithMessage("Customer Id is required");
-
         RuleFor(t => t.RequestType)
             .NotNull()
             .Length(5)

@@ -9,9 +9,9 @@ namespace CS.BL.Services
 {
     public class MessageService : IMessageService
     {
-        readonly ApplicationContext _context;
-        readonly IMapper _mapper;
-        readonly ICustomMapper _customMapper;
+        private readonly ApplicationContext _context;
+        private readonly IMapper _mapper;
+        private readonly ICustomMapper _customMapper;
 
         public MessageService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
         {
@@ -42,19 +42,28 @@ namespace CS.BL.Services
                 .Include(m => m.Attachments)
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
+            if (message == null)
+            {
+                throw new Exception("Message null ref");
+            }
+            
             return _customMapper.MapToMessageDto(message);
         }
 
-        public async Task<bool> SendMessage(SendMessageDto messageDto)
+        public async Task<MessageDto> SendMessage(SendMessageDto messageDto, Guid senderId)
         {
             var message = _mapper.Map<Message>(messageDto);
 
-            if (message != null)
+            if (message == null)
             {
-                await _context.Messages.AddAsync(message);
+                throw new Exception("Message null ref");
             }
 
-            return await SaveAsync();
+            message.UserId = senderId;
+            
+            await _context.Messages.AddAsync(message);
+            
+            return _customMapper.MapToMessageDto(message);
         }
     }
 }

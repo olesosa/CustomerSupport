@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using CS.API.Helpers;
 using CS.BL.Helpers;
 using CS.BL.Interfaces;
@@ -14,21 +13,28 @@ using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(CustomExceptionFilter));
+});
+
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IDialogService, DialogService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IDetailsService, DetailsService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ICustomMapper, CustomMapper>();
 builder.Services.AddScoped<DataSeeder>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHostedService<BackgroundNotificationService>();
-builder.Services.AddValidatorsFromAssemblyContaining<AssignTicketDtoValidators>();
-builder.Services.AddValidatorsFromAssemblyContaining<TicketAttachmentDtoValidator>();
+
 builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<SendMessageDtoValidators>();
-            
+builder.Services.AddValidatorsFromAssemblyContaining<TicketSolveDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<TicketCloseDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SendMessageDtoValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -36,7 +42,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbString"));
-    //options.UseSqlServer(b => b.MigrationsAssembly("CS.API"));
 });
 
 builder.Services.AddCors(options =>
@@ -48,21 +53,6 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Admin", policy =>
-    {
-        policy.RequireRole("Admin");
-        policy.RequireClaim("RoleName");
-    });
-    options.AddPolicy("User", policy =>
-    {
-        policy.RequireRole("User");
-        policy.RequireClaim("RoleName");
-    });
-});
-
 
 builder.Services.AddAuthentication(options =>
     {

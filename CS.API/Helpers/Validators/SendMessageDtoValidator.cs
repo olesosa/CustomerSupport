@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace CS.API.Helpers.Validators;
 
-public class SendMessageDtoValidators : AbstractValidator<SendMessageDto>
+public class SendMessageDtoValidator : AbstractValidator<SendMessageDto>
 {
-    public SendMessageDtoValidators()
+    public SendMessageDtoValidator()
     {
         RuleFor(s => s.Id)
             .NotNull()
@@ -14,10 +14,6 @@ public class SendMessageDtoValidators : AbstractValidator<SendMessageDto>
         RuleFor(s=>s.DialogId)            
             .NotNull()
             .WithMessage("Dialog Id is required");
-        
-        RuleFor(s=>s.SenderId)            
-            .NotNull()
-            .WithMessage("Sender Id is required");
         
         RuleFor(s=>s.MessageText)            
             .NotNull()
