@@ -1,7 +1,7 @@
 using CS.DOM.DTO;
 using FluentValidation;
 
-namespace CS.API.Helpers.Validators;
+namespace CS.BL.Helpers.Validators;
 
 public class TicketCloseDtoValidator : AbstractValidator<TicketCloseDto>
 {
