@@ -5,6 +5,9 @@ namespace CS.BL.Interfaces
 {
     public interface IAttachmentService
     {
-        Task<string> AddAttachment(IFormFile file, Guid guid);
+        Task<Guid> AddTicketAttachment(IFormFile file, Guid ticketId);
+        Task<Guid> AddMessageAttachment(IFormFile file, Guid ticketId);
+        Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId);
+        Task<AttachmentGetDto> GetMessageAttachment(Guid messageId);
     }
 }

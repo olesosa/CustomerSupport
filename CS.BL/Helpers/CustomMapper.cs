@@ -12,32 +12,14 @@ namespace CS.BL.Helpers
             {
                 Id = ticket.Id,
                 CustomerId = ticket.CustomerId,
+                Number = ticket.Number,
                 RequestType = ticket.RequestType,
                 Topic = ticket.Topic,
-                IsAssigned = ticket.IsAssigned,
                 Description = ticket.Details.Description,
+                IsAssigned = ticket.Details.IsAssigned,
                 IsClosed =ticket.Details.IsClosed,
                 IsSolved = ticket.Details.IsSolved,
-                CreationTime = ticket.Details.CreationTime,
-                AttachmentsFilePath = ticket.Attachments
-                .Select(t => t.FilePath).ToList(),
-            };
-        }
-
-        public Ticket MapToTicket(TicketCreateDto ticketDto)
-        {
-            return new Ticket()
-            {
-                RequestType = ticketDto.RequestType,
-                Topic = ticketDto.Topic,
-                IsAssigned = false,
-                Details = new TicketDetails()
-                {
-                    Description = ticketDto.Description,
-                    CreationTime = ticketDto.CreationTime,
-                    IsSolved = false,
-                    IsClosed = false,
-                },
+                CreationTime = ticket.Details.CreationTime
             };
         }
 

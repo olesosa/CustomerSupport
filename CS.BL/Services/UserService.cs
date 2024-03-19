@@ -3,6 +3,7 @@ using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
+using CS.DOM.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
@@ -18,42 +19,21 @@ namespace CS.BL.Services
             _mapper = mapper;
         }
 
-        private async Task<bool> SaveAsync()
-        {
-            var saved = await _context.SaveChangesAsync();
-
-            return saved > 0 ? true : false;
-        }
-
-        public async Task<bool> DoEmailExist(string email)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
-            if (user != null)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public async Task<bool> Create(UserSignUpDto userSignUpDto)
+        public async Task<UserDto> Create(UserSignUpDto userSignUpDto)
         {
             var user = _mapper.Map<User>(userSignUpDto);
 
-            if (user != null)
+            if (await _context.Users.AnyAsync(u => u.Email == userSignUpDto.Email))
             {
-                await _context.AddAsync(user);
+                throw new ApiException(400, "User already exist");
             }
 
-            return await SaveAsync();
-        }
+            user.Id = new Guid();
+            
+            await _context.AddAsync(user);
 
-        public async Task<User?> GetById(Guid userId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+            return _mapper.Map<UserDto>(await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id));
         }
+        
     }
 }
