@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using CS.API.Helpers;
 using CS.BL.Helpers;
 using CS.BL.Interfaces;
@@ -9,34 +8,69 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CS.Api.BackgroundServices;
-using CS.API.Helpers.Validators;
+using CS.BL.Helpers.Validators;
 using FluentValidation;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(CustomExceptionFilter));
+});
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IDialogService, DialogService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IDetailsService, DetailsService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ICustomMapper, CustomMapper>();
 builder.Services.AddScoped<DataSeeder>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHostedService<BackgroundNotificationService>();
-builder.Services.AddValidatorsFromAssemblyContaining<AssignTicketDtoValidators>();
-builder.Services.AddValidatorsFromAssemblyContaining<TicketAttachmentDtoValidator>();
+
 builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<SendMessageDtoValidators>();
-            
+builder.Services.AddValidatorsFromAssemblyContaining<TicketSolveDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<TicketCloseDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SendMessageDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UserSignUpDtoValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
+
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
 
 builder.Services.AddDbContext<ApplicationContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DbString"));
-    //options.UseSqlServer(b => b.MigrationsAssembly("CS.API"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 builder.Services.AddCors(options =>
@@ -48,21 +82,6 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Admin", policy =>
-    {
-        policy.RequireRole("Admin");
-        policy.RequireClaim("RoleName");
-    });
-    options.AddPolicy("User", policy =>
-    {
-        policy.RequireRole("User");
-        policy.RequireClaim("RoleName");
-    });
-});
-
 
 builder.Services.AddAuthentication(options =>
     {

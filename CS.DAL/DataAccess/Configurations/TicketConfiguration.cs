@@ -1,4 +1,5 @@
 ﻿using CS.DAL.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CS.DAL.DataAccess.Configurations
@@ -10,7 +11,11 @@ namespace CS.DAL.DataAccess.Configurations
             builder
                 .HasOne(t => t.Details)
                 .WithOne(t => t.Ticket)
-                .HasForeignKey<Ticket>(t => t.DetailsId);
+                .HasForeignKey<TicketDetails>(t => t.TicketId);
+
+            builder
+                .Property(t => t.Number)
+                .UseIdentityColumn(1);
 
             base.Configure(builder);
         }

@@ -26,35 +26,20 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
+            var userRole = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+
+            var userDto = new UserSignUpDto()
             {
-                Guid.TryParse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
-                var userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
-                var userRole = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+                Id = userId,
+                Email = userEmail,
+                RoleName = userRole,
+            };
 
-                var userDto = new UserSignUpDto()
-                {
-                    Id = userId,
-                    Email = userEmail,
-                    RoleName = userRole,
-                };
+            var user = await _userSevice.Create(userDto);
 
-                if (!await _userSevice.DoEmailExist(userEmail))
-                {
-                    return BadRequest("User already exist");
-                }
-                if (await _userSevice.Create(userDto))
-                {
-                    return Ok("User was created");
-                }
-                else
-                {
-                    return BadRequest("Somth went wrong");
-                }
-            }
-            catch { }
-
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Ok(user);
         }
     }
 }

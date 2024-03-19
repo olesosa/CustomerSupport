@@ -17,8 +17,8 @@ public class BackgroundNotificationService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await CheckUnReadMessages();
-            await CheckNewTickets();
+            //await CheckUnReadMessages();
+            //await CheckNewTickets();
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
@@ -49,7 +49,7 @@ public class BackgroundNotificationService : BackgroundService
 
         var tickets = await context.Tickets
             .Include(t => t.Details)
-            .Where(t => t.IsAssigned && t.Details.CreationTime.AddMinutes(1) < DateTime.Now)
+            .Where(t => t.Details.IsAssigned && t.Details.CreationTime.AddMinutes(1) < DateTime.Now)
             .ToListAsync();
 
         var tasks = tickets.Select(emailService.SendEmail);

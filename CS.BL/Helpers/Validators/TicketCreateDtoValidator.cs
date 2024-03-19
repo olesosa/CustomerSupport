@@ -1,20 +1,12 @@
 using CS.DOM.DTO;
 using FluentValidation;
 
-namespace CS.API.Helpers.Validators;
+namespace CS.BL.Helpers.Validators;
 
 public class TicketCreateDtoValidator : AbstractValidator<TicketCreateDto>
 {
     public TicketCreateDtoValidator()
     {
-        RuleFor(t => t.Id)
-            .NotNull()
-            .WithMessage("Id is required");
-        
-        RuleFor(t => t.CustomerId)
-            .NotNull()
-            .WithMessage("Customer Id is required");
-
         RuleFor(t => t.RequestType)
             .NotNull()
             .Length(5)

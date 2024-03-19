@@ -1,10 +1,13 @@
 ﻿using CS.DOM.DTO;
+using Microsoft.AspNetCore.Http;
 
 namespace CS.BL.Interfaces
 {
     public interface IAttachmentService
     {
-        Task<bool> AddAttachment(TicketAttachmentDto attachment);
-        Task<bool> AddAttachment(List<TicketAttachmentDto> attachments);
+        Task<Guid> AddTicketAttachment(IFormFile file, Guid ticketId);
+        Task<Guid> AddMessageAttachment(IFormFile file, Guid ticketId);
+        Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId);
+        Task<AttachmentGetDto> GetMessageAttachment(Guid messageId);
     }
 }

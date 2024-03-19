@@ -7,6 +7,6 @@ namespace CS.BL.Interfaces
     {
         Task<MessageDto?> GetById(Guid id, CancellationToken cancellationToken);
         Task<List<MessageDto>?> GetAllByDialogId(Guid dialogId, CancellationToken cancellationToken);
-        Task<bool> SendMessage(SendMessageDto messageDto);
+        Task<MessageDto> SendMessage(SendMessageDto messageDto, Guid senderId);
     }
 }

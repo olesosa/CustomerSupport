@@ -1,10 +1,9 @@
-﻿using CS.API.Filters;
+﻿using System.Security.Claims;
 using CS.BL.Interfaces;
 using CS.DOM.DTO;
+using CS.DOM.Pagination;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CS.API.Controllers
 {
@@ -13,15 +12,19 @@ namespace CS.API.Controllers
     public class TicketController : ControllerBase
     {
         private readonly ITicketService _ticketService;
-
-        public TicketController(ITicketService ticketService)
+        private readonly IDetailsService _detailsService;
+        private readonly IAttachmentService _attachmentService;
+        
+        public TicketController(ITicketService ticketService, IDetailsService detailsService, IAttachmentService attachmentService)
         {
             _ticketService = ticketService;
+            _detailsService = detailsService;
+            _attachmentService = attachmentService;
         }
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpPost("Tickets")]
-        public async Task<IActionResult> GetAll([FromBody] TicketFilter filter, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationFilter filter, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -30,14 +33,7 @@ namespace CS.API.Controllers
 
             var tickets = await _ticketService.GetAll(filter, cancellationToken);
 
-            if (tickets != null)
-            {
-                return Ok(tickets);
-            }
-            else
-            {
-                return NotFound("No UnAssigned Tickets Left");
-            }
+            return Ok(tickets);
         }
 
         [Authorize]
@@ -45,33 +41,15 @@ namespace CS.API.Controllers
         public async Task<IActionResult> Create([FromBody] TicketCreateDto ticket)
         {
             if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState);
+            }
 
-            if (await _ticketService.Create(ticket))
-            {
-                return Ok("Ticket was created");
-            }
-            else
-            {
-                return BadRequest("Ticket can not be created");
-            }
-        }
-        
-        [Authorize]
-        [HttpDelete("{ticketId:Guid}")]
-        public async Task<IActionResult> DeleteTicket([FromRoute] Guid ticketId)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            if (await _ticketService.Delete(ticketId))
-            {
-                return Ok("Ticket was successfully deleted");
-            }
-            else
-            {
-                return NotFound("Your ticket can not be deleted");
-            }
+            var createdTicket = await _ticketService.Create(ticket, userId);
+
+            return Ok(createdTicket);
         }
 
         [Authorize(Roles = "Admin")]
@@ -81,40 +59,80 @@ namespace CS.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (await _ticketService.AssignTicket(ticketDto.ticketId, ticketDto.adminId))
-            {
-                return Ok("Ticket has been assigned");
-            }
-            else
-            {
-                return NotFound("Invalid ticket id");
-            }
+            var ticket = await _ticketService.AssignTicket(ticketDto.ticketId, ticketDto.adminId);
+
+            return Ok(ticket);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPatch("UnAssign/{ticketId:Guid}")]
-        public async Task<IActionResult> UnAssign([FromRoute] Guid ticketId)
+        public async Task<IActionResult> UnAssignTicket([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (await _ticketService.UnAssignTicket(ticketId))
-            {
-                return Ok("Ticket has been assigned");
-            }
-            else
-            {
-                return NotFound("Invalid ticket id");
-            }
+            var ticket = await _ticketService.UnAssignTicket(ticketId);
+
+            return Ok(ticket);
         }
         
         [Authorize]
-        [HttpPatch("Attachment")]
-        public async Task<IActionResult> AddAttachment([FromBody] TicketAttachmentDto attachmentDto)
+        [HttpPost("Attachment/{ticketId:Guid}")]
+        public async Task<IActionResult> AddTicketAttachment(IFormFile file, [FromRoute] Guid ticketId)
         {
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var fileId= await _attachmentService.AddTicketAttachment(file, ticketId);
+            
+            return Ok(fileId);
         }
+        
+        [Authorize]
+        [HttpGet("Attachment/{ticketId:Guid}")]
+        public async Task<IActionResult> AddTicketAttachment([FromRoute] Guid attachmentId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var attachment = await _attachmentService.GetTicketAttachment(attachmentId);
+
+            return File(attachment.FileBytes, attachment.ContentType, attachment.FilePath);
+        }
+
+        [Authorize]
+        [HttpPatch("Solve")]
+        public async Task<IActionResult> MarkAsSolved([FromBody] TicketSolveDto ticketDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var details = await _detailsService.MarkAsSolved(ticketDto);
+            
+            return Ok(details);
+        }
+        
+        [Authorize]
+        [HttpPatch("Close")]
+        public async Task<IActionResult> MarkAsClosed([FromBody] TicketCloseDto ticketDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var details = await _detailsService.MarkAsClosed(ticketDto);
+            
+            return Ok(details);
+        }
+        
     }
 }

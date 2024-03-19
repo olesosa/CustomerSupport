@@ -9,11 +9,11 @@ namespace CS.BL.Services
 {
     public class DialogService : IDialogService
     {
-        readonly ApplicationContext _context;
-        readonly IMapper _mapper;
-        readonly ICustomMapper _customMapper;
-        readonly ITicketService _ticketService;
-        readonly IMessageService _messageService;
+        private readonly ApplicationContext _context;
+        private readonly IMapper _mapper;
+        private readonly ICustomMapper _customMapper;
+        private readonly ITicketService _ticketService;
+        private readonly IMessageService _messageService;
 
         public DialogService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper,
             ITicketService ticketService, IMessageService messageService) 
@@ -23,13 +23,6 @@ namespace CS.BL.Services
             _customMapper = customMapper;
             _ticketService = ticketService;
             _messageService = messageService;
-        }
-
-        private async Task<bool> SaveAsync()
-        {
-            var saved = await _context.SaveChangesAsync();
-
-            return saved > 0 ? true : false;
         }
 
         public async Task<DialogDto?> GetById(Guid id, CancellationToken cancellationToken = default)

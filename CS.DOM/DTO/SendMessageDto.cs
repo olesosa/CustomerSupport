@@ -5,7 +5,6 @@ namespace CS.DOM.DTO
     public class SendMessageDto
     {
         public Guid Id { get; set; }
-        public Guid SenderId { get; set; }
         public Guid DialogId { get; set; }
         public string MessageText { get; set; }
     }
