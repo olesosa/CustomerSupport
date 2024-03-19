@@ -25,13 +25,6 @@ namespace CS.BL.Services
             _messageService = messageService;
         }
 
-        private async Task<bool> SaveAsync()
-        {
-            var saved = await _context.SaveChangesAsync();
-
-            return saved > 0 ? true : false;
-        }
-
         public async Task<DialogDto?> GetById(Guid id, CancellationToken cancellationToken = default)
         {
             var dialog = await _context.Dialogs

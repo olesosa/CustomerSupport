@@ -10,10 +10,10 @@ namespace CS.BL.Helpers
         {
             CreateMap<TicketShortInfoDto, Ticket>();
             CreateMap<Ticket, TicketShortInfoDto>();
-            
-            CreateMap<Ticket, TicketUpdateDto>();
-            CreateMap<TicketUpdateDto, Ticket>();
 
+            CreateMap<Ticket, TicketCreateDto>();
+            CreateMap<TicketCreateDto, Ticket>();
+            
             CreateMap<User, UserSignUpDto>();
             CreateMap<UserSignUpDto, User>();
 
@@ -22,6 +22,9 @@ namespace CS.BL.Helpers
 
             CreateMap<TicketShortInfoDto, TicketCreateDto>();
             CreateMap<TicketCreateDto, TicketShortInfoDto>();
+
+            CreateMap<UserDto, User>();
+            CreateMap<User, UserDto>();
         }
     }
 }

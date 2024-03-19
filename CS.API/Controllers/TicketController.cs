@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
-using CS.BL.Helpers;
 using CS.BL.Interfaces;
 using CS.DOM.DTO;
+using CS.DOM.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,9 +22,9 @@ namespace CS.API.Controllers
             _attachmentService = attachmentService;
         }
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpPost("Tickets")]
-        public async Task<IActionResult> GetAll([FromBody] TicketFilter filter, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationFilter filter, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -33,19 +33,12 @@ namespace CS.API.Controllers
 
             var tickets = await _ticketService.GetAll(filter, cancellationToken);
 
-            if (tickets != null)
-            {
-                return Ok(tickets);
-            }
-            else
-            {
-                return NotFound("No UnAssigned Tickets Left");
-            }
+            return Ok(tickets);
         }
 
         [Authorize]
         [HttpPost("Create")]
-        public async Task<IActionResult> Create([FromBody] TicketCreateDto ticket) // TODO Use claims
+        public async Task<IActionResult> Create([FromBody] TicketCreateDto ticket)
         {
             if (!ModelState.IsValid)
             {
@@ -58,23 +51,6 @@ namespace CS.API.Controllers
 
             return Ok(createdTicket);
         }
-        
-        [Authorize]
-        [HttpDelete("{ticketId:Guid}")]
-        public async Task<IActionResult> DeleteTicket([FromRoute] Guid ticketId)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (await _ticketService.Delete(ticketId))
-            {
-                return Ok("Ticket was successfully deleted");
-            }
-            else
-            {
-                return NotFound("Your ticket can not be deleted");
-            }
-        }
 
         [Authorize(Roles = "Admin")]
         [HttpPatch("Assign/{ticketId:Guid}")]
@@ -83,14 +59,9 @@ namespace CS.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (await _ticketService.AssignTicket(ticketDto.ticketId, ticketDto.adminId))
-            {
-                return Ok("Ticket has been assigned");
-            }
-            else
-            {
-                return NotFound("Invalid ticket id");
-            }
+            var ticket = await _ticketService.AssignTicket(ticketDto.ticketId, ticketDto.adminId);
+
+            return Ok(ticket);
         }
 
         [Authorize(Roles = "Admin")]
@@ -102,28 +73,37 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (await _ticketService.UnAssignTicket(ticketId))
-            {
-                return Ok("Ticket has been assigned");
-            }
-            else
-            {
-                return NotFound("Invalid ticket id");
-            }
+            var ticket = await _ticketService.UnAssignTicket(ticketId);
+
+            return Ok(ticket);
         }
         
         [Authorize]
         [HttpPost("Attachment/{ticketId:Guid}")]
-        public async Task<IActionResult> AddTicketAttachment( IFormFile file, [FromRoute] Guid ticketId)
+        public async Task<IActionResult> AddTicketAttachment(IFormFile file, [FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var filePath= await _attachmentService.AddAttachment(file, ticketId);
+            var fileId= await _attachmentService.AddTicketAttachment(file, ticketId);
             
-            return Ok(filePath);
+            return Ok(fileId);
+        }
+        
+        [Authorize]
+        [HttpGet("Attachment/{ticketId:Guid}")]
+        public async Task<IActionResult> AddTicketAttachment([FromRoute] Guid attachmentId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var attachment = await _attachmentService.GetTicketAttachment(attachmentId);
+
+            return File(attachment.FileBytes, attachment.ContentType, attachment.FilePath);
         }
 
         [Authorize]

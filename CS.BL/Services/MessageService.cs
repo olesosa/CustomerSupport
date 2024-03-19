@@ -19,12 +19,6 @@ namespace CS.BL.Services
             _mapper = mapper;
             _customMapper = customMapper;
         }
-        private async Task<bool> SaveAsync()
-        {
-            var saved = await _context.SaveChangesAsync();
-
-            return saved > 0 ? true : false;
-        }
 
         public async Task<List<MessageDto>?> GetAllByDialogId(Guid dialogId, CancellationToken cancellationToken = default)
         {

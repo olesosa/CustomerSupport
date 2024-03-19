@@ -55,16 +55,30 @@ namespace CS.API.Controllers
 
         [Authorize]
         [HttpPost("Attachment/{messageId:Guid}")]
-        public async Task<IActionResult> AddTicketAttachment([FromForm] IFormFile file, [FromRoute] Guid messageId)
+        public async Task<IActionResult> AddMessageAttachment(IFormFile file, [FromRoute] Guid messageId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var filePath= await _attachmentService.AddAttachment(file, messageId);
-            
+            var filePath= await _attachmentService.AddMessageAttachment(file, messageId);
+
             return Ok(filePath);
+        }
+        
+        [Authorize]
+        [HttpGet("Attachment/{messageId:Guid}")]
+        public async Task<IActionResult> GetMessageAttachment([FromRoute] Guid messageId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var attachment= await _attachmentService.GetMessageAttachment(messageId);
+
+            return File(attachment.FileBytes, attachment.ContentType, attachment.FilePath);
         }
     }
 }

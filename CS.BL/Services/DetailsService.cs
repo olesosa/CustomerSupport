@@ -15,13 +15,6 @@ public class DetailsService : IDetailsService
         _context = context;
         _customMapper = customMapper;
     }
-    
-    private async Task<bool> SaveAsync()
-    {
-        var saved = await _context.SaveChangesAsync();
-
-        return saved > 0 ? true : false;
-    }
 
     public async Task<DetailsPatchDto> MarkAsSolved(TicketSolveDto ticketDto)
     {

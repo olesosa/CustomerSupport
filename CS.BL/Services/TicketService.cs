@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
-using CS.BL.Helpers;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
+using CS.DOM.Helpers;
+using CS.DOM.Pagination;
 using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
@@ -13,6 +14,7 @@ namespace CS.BL.Services
         private readonly ApplicationContext _context;
         private readonly IMapper _mapper;
         private readonly ICustomMapper _customMapper;
+
         public TicketService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
         {
             _context = context;
@@ -20,92 +22,147 @@ namespace CS.BL.Services
             _customMapper = customMapper;
         }
 
-        private async Task<bool> SaveAsync()
-        {
-            var saved = await _context.SaveChangesAsync();
-
-            return saved > 0 ? true : false;
-        }
-        
-        private async Task<Ticket?> GetById(Guid ticketId, CancellationToken cancellationToken = default)
-        {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
-
-            return ticket;
-        }
-
         public async Task<TicketShortInfoDto> Create(TicketCreateDto ticketDto, Guid userId)
         {
-            var ticket = _customMapper.MapToTicket(ticketDto);
+            var ticket = _mapper.Map<Ticket>(ticketDto);
 
             ticket.CustomerId = userId;
-            
+
             await _context.AddAsync(ticket);
 
+            var details = new TicketDetails()
+            {
+                Description = ticketDto.Description,
+                CreationTime = ticketDto.CreationTime,
+                IsAssigned = false,
+                IsSolved = false,
+                IsClosed = false,
+                TicketId = ticket.Id,
+            };
+            
+            await _context.AddAsync(details);
+            
             await _context.SaveChangesAsync();
-
-            var createdTicket = await GetById(ticket.Id);
+            
+            var createdTicket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticket.Id);
 
             return _mapper.Map<TicketShortInfoDto>(createdTicket);
         }
 
-        public async Task<bool> Delete(Guid id)
+        public async Task<PagedResponse<List<TicketShortInfoDto>>> GetAll(PaginationFilter filter,
+            CancellationToken cancellationToken = default)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(u => u.Id == id);
+            var tickets = _context.Tickets
+                .Include(t => t.Details);
 
-            if (ticket != null)
+            if (filter.RequestType != null)
             {
-                _context.Tickets.Remove(ticket);
+                tickets.Where(t => t.Details.IsAssigned);
             }
 
-            return await SaveAsync();
-        }
+            if (filter.IsAssigned.HasValue)
+            {
+                tickets.Where(t => t.Details.IsAssigned == filter.IsAssigned);
+            }
 
-        public async Task<List<TicketShortInfoDto>> GetAll(TicketFilter filter, CancellationToken cancellationToken = default)
-        {
-            return await _context.Tickets
-                .Include(t => t.Details)
-                .Where(t => t.IsAssigned == filter.IsAssigned)
+            if (filter.IsSolved.HasValue)
+            {
+                tickets.Where(t => t.Details.IsSolved == filter.IsSolved);
+            }
+
+            if (filter.IsClosed.HasValue)
+            {
+                tickets.Where(t => t.Details.IsClosed == filter.IsClosed);
+            }
+
+            if (filter.SortDir == "asc")
+            {
+                if (filter.Number.HasValue)
+                {
+                    tickets.OrderBy(t => t.Number);
+                }
+            }
+            else
+            {
+                if (filter.Number.HasValue)
+                {
+                    tickets.OrderByDescending(t => t.Number);
+                }
+            }
+
+            var ticketDtos = await tickets
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
                 .Select(t => _mapper.Map<TicketShortInfoDto>(t))
                 .ToListAsync(cancellationToken);
+
+            if (ticketDtos == null)
+            {
+                throw new ApiException(404, "Tickets not found");
+            }
+
+            var pagedResponse = new PagedResponse<List<TicketShortInfoDto>>
+            {
+                Data = ticketDtos,
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize,
+            };
+
+            return pagedResponse;
         }
 
         public async Task<TicketFullInfoDto?> GetFullInfoById(Guid id, CancellationToken cancellationToken = default)
         {
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
-                .Include(t => t.Attachments)
                 .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+
+            if (ticket == null)
+            {
+                throw new ApiException(404, "Ticket not found");
+            }
 
             return _customMapper.MapToTicketFullInfo(ticket);
         }
 
-        public async Task<bool> AssignTicket(Guid ticketId, Guid adminId)
+        public async Task<TicketShortInfoDto> AssignTicket(Guid ticketId, Guid adminId,
+            CancellationToken cancellationToken = default)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId);
+            var ticket = await _context.Tickets
+                .Include(t => t.Details)
+                .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-            if (ticket != null)
+            if (ticket == null)
             {
-                ticket.AdminId = adminId;
-                ticket.IsAssigned = true;
-                ticket.AssignmentTime = DateTime.Now;
+                throw new ApiException(404, "Ticket not found");
             }
 
-            return await SaveAsync();
+            ticket.AdminId = adminId;
+            ticket.Details.IsAssigned = true;
+            ticket.Details.AssignmentTime = DateTime.Now;
+
+            _context.Tickets.Update(ticket);
+
+            return _mapper.Map<TicketShortInfoDto>(ticket);
         }
 
-        public async Task<bool> UnAssignTicket(Guid ticketId)
+        public async Task<TicketShortInfoDto> UnAssignTicket(Guid ticketId,
+            CancellationToken cancellationToken = default)
         {
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId);
+            var ticket = await _context.Tickets
+                .Include(t => t.Details)
+                .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
 
-            if (ticket != null)
+            if (ticket == null)
             {
-                ticket.AdminId = null;
-                ticket.IsAssigned = false;
-                ticket.AssignmentTime = null;
+                throw new ApiException(404, "Ticket not found");
             }
 
-            return await SaveAsync();
+            ticket.AdminId = null;
+            ticket.Details.IsAssigned = false;
+            ticket.Details.AssignmentTime = null;
+
+            return _mapper.Map<TicketShortInfoDto>(ticket);
         }
 
         public async Task<bool> IsTicketExist(Guid ticketId)
@@ -114,8 +171,5 @@ namespace CS.BL.Services
 
             return result;
         }
-
-
-
     }
 }

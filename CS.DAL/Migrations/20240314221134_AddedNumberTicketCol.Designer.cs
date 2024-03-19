@@ -4,6 +4,7 @@ using CS.DAL.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CS.DAL.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20240314221134_AddedNumberTicketCol")]
+    partial class AddedNumberTicketCol
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -102,6 +104,9 @@ namespace CS.DAL.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("DetailsId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Number")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
@@ -121,6 +126,9 @@ namespace CS.DAL.Migrations
                     b.HasIndex("AdminId");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("DetailsId")
+                        .IsUnique();
 
                     b.ToTable("Tickets");
                 });
@@ -170,13 +178,7 @@ namespace CS.DAL.Migrations
                     b.Property<bool>("IsSolved")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("TicketId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TicketId")
-                        .IsUnique();
 
                     b.ToTable("TicketDetails");
                 });
@@ -253,9 +255,17 @@ namespace CS.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CS.DAL.Models.TicketDetails", "Details")
+                        .WithOne("Ticket")
+                        .HasForeignKey("CS.DAL.Models.Ticket", "DetailsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Admin");
 
                     b.Navigation("Customer");
+
+                    b.Navigation("Details");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.TicketAttachment", b =>
@@ -263,17 +273,6 @@ namespace CS.DAL.Migrations
                     b.HasOne("CS.DAL.Models.Ticket", "Ticket")
                         .WithMany("Attachments")
                         .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ticket");
-                });
-
-            modelBuilder.Entity("CS.DAL.Models.TicketDetails", b =>
-                {
-                    b.HasOne("CS.DAL.Models.Ticket", "Ticket")
-                        .WithOne("Details")
-                        .HasForeignKey("CS.DAL.Models.TicketDetails", "TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -294,10 +293,13 @@ namespace CS.DAL.Migrations
                 {
                     b.Navigation("Attachments");
 
-                    b.Navigation("Details")
-                        .IsRequired();
-
                     b.Navigation("Dialog")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CS.DAL.Models.TicketDetails", b =>
+                {
+                    b.Navigation("Ticket")
                         .IsRequired();
                 });
 
