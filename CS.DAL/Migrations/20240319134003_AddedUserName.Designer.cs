@@ -4,6 +4,7 @@ using CS.DAL.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CS.DAL.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20240319134003_AddedUserName")]
+    partial class AddedUserName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,7 +38,7 @@ namespace CS.DAL.Migrations
                     b.HasIndex("TicketId")
                         .IsUnique();
 
-                    b.ToTable("Dialogs", (string)null);
+                    b.ToTable("Dialogs");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.Message", b =>
@@ -67,7 +69,7 @@ namespace CS.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Messages", (string)null);
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.MessageAttachment", b =>
@@ -87,7 +89,7 @@ namespace CS.DAL.Migrations
 
                     b.HasIndex("MessageId");
 
-                    b.ToTable("MessageAttachments", (string)null);
+                    b.ToTable("MessageAttachments");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.Ticket", b =>
@@ -122,7 +124,7 @@ namespace CS.DAL.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("Tickets", (string)null);
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.TicketAttachment", b =>
@@ -142,7 +144,7 @@ namespace CS.DAL.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketAttachments", (string)null);
+                    b.ToTable("TicketAttachments");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.TicketDetails", b =>
@@ -178,7 +180,7 @@ namespace CS.DAL.Migrations
                     b.HasIndex("TicketId")
                         .IsUnique();
 
-                    b.ToTable("TicketDetails", (string)null);
+                    b.ToTable("TicketDetails");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.User", b =>
@@ -201,7 +203,7 @@ namespace CS.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("CS.DAL.Models.Dialog", b =>

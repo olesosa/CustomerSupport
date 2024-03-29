@@ -4,10 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CS.DAL.DataAccess.Configurations
 {
-    public class TicketConfiguration : BaseConfiguration<Ticket>
+    public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
     {
-        public override void Configure(EntityTypeBuilder<Ticket> builder)
+        public void Configure(EntityTypeBuilder<Ticket> builder)
         {
+            builder
+                .HasKey(t => t.Id);
+            
             builder
                 .HasOne(t => t.Details)
                 .WithOne(t => t.Ticket)
@@ -16,8 +19,6 @@ namespace CS.DAL.DataAccess.Configurations
             builder
                 .Property(t => t.Number)
                 .UseIdentityColumn(1);
-
-            base.Configure(builder);
         }
     }
 }
