@@ -49,7 +49,7 @@ namespace CS.BL.Services
                 FilePath = path,
             });
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); 
 
             return id;
         }
@@ -92,7 +92,6 @@ namespace CS.BL.Services
         
         public async Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId)
         {
-
             var attachment = await _context.TicketAttachments
                 .FirstOrDefaultAsync(t => t.Id == attachmentId);
                 
@@ -117,10 +116,10 @@ namespace CS.BL.Services
                 };
         }
 
-        public async Task<AttachmentGetDto> GetMessageAttachment(Guid messageId)
+        public async Task<AttachmentGetDto> GetMessageAttachment(Guid attachmentId)
         {
             var attachment = await _context.MessageAttachments
-                .FirstOrDefaultAsync(t => t.Id == messageId);
+                .FirstOrDefaultAsync(t => t.Id == attachmentId);
                 
             if (attachment == null)
             {
@@ -141,6 +140,22 @@ namespace CS.BL.Services
                 ContentType = contentType,
                 FilePath = Path.Combine(filePath),
             };
+        }
+
+        public async Task<List<Guid>> GetAllDialogAttachments(Guid dialogId)
+        {
+            var attachments = await _context.MessageAttachments
+                .Include(a => a.Message)
+                .Where(a => a.Message.DialogId == dialogId)
+                .Select(a => a.Id)
+                .ToListAsync();
+
+            if (attachments == null)
+            {
+                throw new ApiException(404, "No attachments to dialog");
+            }
+
+            return attachments;
         }
     }
 }
