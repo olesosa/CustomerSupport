@@ -9,11 +9,13 @@ namespace CS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly IUserService _userSevice;
 
-        public UserController(IUserService userSevice)
+        private const string ngrok = "";
+
+        public UsersController(IUserService userSevice)
         {
             _userSevice = userSevice;
         }
@@ -27,27 +29,51 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userName = HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            var userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
+            var userRole = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+
+            var userDto = new UserSignUpDto()
             {
-                var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-                var userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
-                var userRole = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+                Id = userId,
+                Name = userName,
+                Email = userEmail,
+                RoleName = userRole,
+            };
 
-                var userDto = new UserSignUpDto()
-                {
-                    Id = userId,
-                    Email = userEmail,
-                    RoleName = userRole,
-                };
+            var user = await _userSevice.Create(userDto);
 
-                var user = await _userSevice.Create(userDto);
+            return Ok(user);
+        }
 
-                return Ok(user);
-            }
-            catch
+        [Authorize(Policy = "User")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteUser()
+        {
+            if (!ModelState.IsValid)
             {
-                throw new ApiException(400, "failed to add user");
+                return BadRequest(ModelState);
             }
+
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var auth = Request.Headers.Authorization;
+
+            using var client = new HttpClient();
+
+            client.DefaultRequestHeaders.Add("Authorization", auth.ToString());
+
+            var response = await client.DeleteAsync($"{ngrok}/api/Users");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ApiException(500, "Can not delete user");
+            }
+
+            await _userSevice.Delete(userId);
+            
+            return Ok("User was deleted");
         }
     }
 }

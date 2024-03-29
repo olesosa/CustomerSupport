@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using CS.API.Helpers;
 using CS.BL.Helpers;
 using CS.BL.Interfaces;
@@ -37,6 +38,20 @@ builder.Services.AddValidatorsFromAssemblyContaining<TicketSolveDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<TicketCloseDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<SendMessageDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UserSignUpDtoValidator>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("User", policy =>
+    {
+        policy.RequireClaim(ClaimTypes.Role, "User")
+            .RequireClaim("EmailConfirmed", "true");
+    });
+    
+    options.AddPolicy("Admin", policy =>
+    {
+        policy.RequireClaim(ClaimTypes.Role, "Admin");
+    });
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>

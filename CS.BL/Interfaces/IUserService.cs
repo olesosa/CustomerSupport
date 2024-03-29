@@ -7,5 +7,6 @@ namespace CS.BL.Interfaces
     public interface IUserService
     {
         Task<UserDto> Create(UserSignUpDto userSignUpDto);
+        Task<bool> Delete(Guid userId);
     }
 }

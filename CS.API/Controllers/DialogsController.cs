@@ -8,12 +8,12 @@ namespace CS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DialogController : ControllerBase
+    public class DialogsController : ControllerBase
     {
         private readonly IDialogService _dialogService;
         private readonly ITicketService _ticketService;
 
-        public DialogController(IDialogService dialogService, ITicketService ticketService)
+        public DialogsController(IDialogService dialogService, ITicketService ticketService)
         {
             _dialogService = dialogService;
             _ticketService = ticketService;
