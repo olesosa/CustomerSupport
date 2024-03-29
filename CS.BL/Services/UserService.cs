@@ -28,12 +28,31 @@ namespace CS.BL.Services
                 throw new ApiException(400, "User already exist");
             }
 
-            user.Id = new Guid();
-            
             await _context.AddAsync(user);
 
-            return _mapper.Map<UserDto>(await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id));
+            await _context.SaveChangesAsync();
+
+            var createdUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
+                
+            var createdUserDto = _mapper.Map<UserDto>(createdUser);
+
+            return createdUserDto;
         }
-        
+
+        public async Task<bool> Delete(Guid userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if (user == null)
+            {
+                throw new ApiException(404, "User not found");
+            }
+
+            _context.Users.Remove(user);
+            
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

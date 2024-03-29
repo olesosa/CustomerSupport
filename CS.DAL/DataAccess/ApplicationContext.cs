@@ -28,6 +28,7 @@ namespace CS.DAL.DataAccess
             modelBuilder.ApplyConfiguration(new DialogConfiguration());
             modelBuilder.ApplyConfiguration(new MessageConfiguration());
             modelBuilder.ApplyConfiguration(new MessageAttachmentConfiguration());
+            
             base.OnModelCreating(modelBuilder);
         }
     }

@@ -19,6 +19,7 @@ public class BackgroundNotificationService : BackgroundService
         {
             //await CheckUnReadMessages();
             //await CheckNewTickets();
+            
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
