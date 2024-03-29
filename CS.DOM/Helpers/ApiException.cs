@@ -6,11 +6,12 @@ public class ApiException : Exception
     public string Detail { get; set; }
 
     
-    public ApiException(int status, string msg) : base(msg)
+    public ApiException(int status, string detail) : base()
     {
         Status = status;
+        Detail = detail;
     }
-    public ApiException(int status, string msg, string detail) : base(msg)
+    public ApiException(int status, string detail, string msg) : base(msg)
     {
         Status = status;
         Detail = detail;

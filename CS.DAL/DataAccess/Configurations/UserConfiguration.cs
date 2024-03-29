@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CS.DAL.DataAccess.Configurations
 {
-    public class UserConfiguration : BaseConfiguration<User>
+    public class UserConfiguration : IEntityTypeConfiguration<User>
     {
-        public override void Configure(EntityTypeBuilder<User> builder)
+        public void Configure(EntityTypeBuilder<User> builder)
         {
+            builder.HasKey(u => u.Id);
+            
             builder
                 .HasMany(u => u.Tickets)
                 .WithOne(u => u.Customer)
@@ -25,8 +27,6 @@ namespace CS.DAL.DataAccess.Configurations
                 .WithOne(u => u.User)
                 .HasForeignKey(u => u.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            base.Configure(builder);
         }
     }
 }

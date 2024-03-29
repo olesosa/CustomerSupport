@@ -1,12 +1,16 @@
 ﻿using CS.DAL.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CS.DAL.DataAccess.Configurations
 {
-    public class DialogConfiguration : BaseConfiguration<Dialog>
+    public class DialogConfiguration : IEntityTypeConfiguration<Dialog>
     {
-        public override void Configure(EntityTypeBuilder<Dialog> builder)
+        public void Configure(EntityTypeBuilder<Dialog> builder)
         {
+            builder
+                .HasKey(d => d.Id);
+            
             builder
                 .HasOne(d => d.Ticket)
                 .WithOne(d => d.Dialog)
@@ -16,8 +20,6 @@ namespace CS.DAL.DataAccess.Configurations
                 .HasMany(d => d.Messages)
                 .WithOne(d => d.Dialog)
                 .HasForeignKey(d => d.DialogId);
-
-            base.Configure(builder);
         }
     }
 }
