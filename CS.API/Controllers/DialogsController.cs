@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using CS.DOM.Helpers;
 
 namespace CS.API.Controllers
 {
@@ -18,7 +19,7 @@ namespace CS.API.Controllers
             _ticketService = ticketService;
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "Admin")]
         [HttpPost("{ticketId:Guid}")]
         public async Task<IActionResult> Create([FromRoute] Guid ticketId)
         {
@@ -27,16 +28,24 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var adminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            if (!await _ticketService.IsTicketExist(ticketId))
+            try
             {
-                return NotFound("Ticket does not exist");
+                var adminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                if (!await _ticketService.IsTicketExist(ticketId))
+                {
+                    return NotFound("Ticket does not exist");
+                }
+
+                var dialog = _dialogService.Create(ticketId, adminId);
+
+                return Ok(dialog);
             }
-
-            var dialog = _dialogService.Create(ticketId, adminId);
-
-            return Ok(dialog);
+            catch
+            {
+                throw new ApiException(500, "Can not create dialog");
+            }
+            
         }
     }
 }
