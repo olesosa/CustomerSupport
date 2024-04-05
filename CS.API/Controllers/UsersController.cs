@@ -21,7 +21,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize]
-        [HttpPost("SignUp")]
+        [HttpPost("signup")]
         public async Task<IActionResult> SignUp()
         {
             if (!ModelState.IsValid)

@@ -16,7 +16,7 @@ public class AttachmentsController : ControllerBase
         _attachmentService = attachmentService;
     }
 
-    [HttpPost("{ticketId:Guid}")]
+    [HttpPost("ticket/{ticketId:Guid}")]
     public async Task<IActionResult> AddTicketAttachment(IFormFile file, [FromRoute] Guid ticketId)
     {
         if (!ModelState.IsValid)
@@ -29,7 +29,7 @@ public class AttachmentsController : ControllerBase
         return Ok(fileId);
     }
 
-    [HttpGet("{attachmentId:Guid}")]
+    [HttpGet("ticket/{attachmentId:Guid}")]
     public async Task<IActionResult> GetTicketAttachment([FromRoute] Guid attachmentId)
     {
         if (!ModelState.IsValid)
@@ -42,7 +42,7 @@ public class AttachmentsController : ControllerBase
         return File(attachment.FileBytes, attachment.ContentType, attachment.FilePath);
     }
 
-    [HttpPost("{messageId:Guid}")]
+    [HttpPost("message/{messageId:Guid}")]
     public async Task<IActionResult> AddMessageAttachment(IFormFile file, [FromRoute] Guid messageId)
     {
         if (!ModelState.IsValid)
@@ -55,7 +55,7 @@ public class AttachmentsController : ControllerBase
         return Ok(filePath);
     }
 
-    [HttpGet("{attachmentId:Guid}")]
+    [HttpGet("message/{attachmentId:Guid}")]
     public async Task<IActionResult> GetMessageAttachment([FromRoute] Guid attachmentId)
     {
         if (!ModelState.IsValid)

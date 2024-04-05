@@ -18,7 +18,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize(Policy = "Admin")]
-        [HttpGet("Messages/{dialogId:Guid}")]
+        [HttpGet("messages/{dialogId:Guid}")]
         public async Task<IActionResult> GetAll([FromRoute] Guid dialogId, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -34,7 +34,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize(Policy = "User")]
-        [HttpPost("Send")]
+        [HttpPost("send")]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageDto message)
         {
             if (!ModelState.IsValid)
@@ -50,7 +50,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize(Policy = "User")]
-        [HttpPost("Receive")]
+        [HttpPost("receive")]
         public async Task<IActionResult> ReceiveMessage([FromBody] SendMessageDto message)
         {
             if (!ModelState.IsValid)
