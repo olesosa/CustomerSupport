@@ -22,8 +22,5 @@ public class TicketCreateDtoValidator : AbstractValidator<TicketCreateDto>
             .MinimumLength(5)
             .WithMessage("Invalid Description");
 
-        RuleFor(t => t.CreationTime)
-            .NotNull()
-            .WithMessage("Creation time is required");
     }
 }

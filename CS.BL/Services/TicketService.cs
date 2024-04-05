@@ -33,7 +33,7 @@ namespace CS.BL.Services
             var details = new TicketDetails()
             {
                 Description = ticketDto.Description,
-                CreationTime = ticketDto.CreationTime,
+                CreationTime = DateTime.Now,
                 IsAssigned = false,
                 IsSolved = false,
                 IsClosed = false,
@@ -91,10 +91,13 @@ namespace CS.BL.Services
             }
 
             var ticketDtos = await tickets
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Skip(filter.PageNumber)
                 .Take(filter.PageSize)
                 .Select(t => _mapper.Map<TicketShortInfoDto>(t))
                 .ToListAsync(cancellationToken);
+            
+            var totalRecords = await _context.Tickets.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
 
             if (ticketDtos == null)
             {
@@ -106,6 +109,8 @@ namespace CS.BL.Services
                 Data = ticketDtos,
                 PageNumber = filter.PageNumber,
                 PageSize = filter.PageSize,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages
             };
 
             return pagedResponse;
