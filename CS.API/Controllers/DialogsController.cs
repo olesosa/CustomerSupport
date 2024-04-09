@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using CS.DOM.Helpers;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CS.API.Controllers
 {
@@ -11,12 +12,10 @@ namespace CS.API.Controllers
     public class DialogsController : ControllerBase
     {
         private readonly IDialogService _dialogService;
-        private readonly ITicketService _ticketService;
 
-        public DialogsController(IDialogService dialogService, ITicketService ticketService)
+        public DialogsController(IDialogService dialogService)
         {
             _dialogService = dialogService;
-            _ticketService = ticketService;
         }
 
         [Authorize(Policy = "Admin")]
@@ -28,24 +27,21 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var adminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            // todo finish here
 
-                if (!await _ticketService.IsTicketExist(ticketId))
-                {
-                    return NotFound("Ticket does not exist");
-                }
+            return Ok();
+        }
 
-                var dialog = _dialogService.Create(ticketId, adminId);
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var roleName = HttpContext.User.FindFirstValue(ClaimTypes.Role);
 
-                return Ok(dialog);
-            }
-            catch
-            {
-                throw new ApiException(500, "Can not create dialog");
-            }
-            
+            var dialogs = await _dialogService.GetAllUserDialogs(userId, roleName);
+
+            return Ok(dialogs);
         }
     }
 }
