@@ -12,8 +12,7 @@ namespace CS.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userSevice;
-
-        private const string ngrok = "";
+        private static readonly string ApiIdentityAddress = ConstVariables.ApiIdentityAddress;
 
         public UsersController(IUserService userSevice)
         {
@@ -21,7 +20,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize]
-        [HttpPost("signup")]
+        [HttpPost("SignUp")]
         public async Task<IActionResult> SignUp()
         {
             if (!ModelState.IsValid)
@@ -29,17 +28,12 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var userName = HttpContext.User.FindFirstValue(ClaimTypes.Name);
-            var userEmail = HttpContext.User.FindFirstValue(ClaimTypes.Email);
-            var userRole = HttpContext.User.FindFirstValue(ClaimTypes.Role);
-
             var userDto = new UserSignUpDto()
             {
-                Id = userId,
-                Name = userName,
-                Email = userEmail,
-                RoleName = userRole,
+                Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
+                Name = HttpContext.User.FindFirstValue(ClaimTypes.Name),
+                Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
+                RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role),
             };
 
             var user = await _userSevice.Create(userDto);
@@ -60,11 +54,11 @@ namespace CS.API.Controllers
 
             var auth = Request.Headers.Authorization;
 
-            using var client = new HttpClient();
+            var client = new HttpClient();
 
             client.DefaultRequestHeaders.Add("Authorization", auth.ToString());
 
-            var response = await client.DeleteAsync($"{ngrok}/api/Users");
+            var response = await client.DeleteAsync($"{ApiIdentityAddress}/Users");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -74,6 +68,22 @@ namespace CS.API.Controllers
             await _userSevice.Delete(userId);
             
             return Ok("User was deleted");
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetUser()
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var user = await _userSevice.GetById(userId);
+
+            return Ok(user);
         }
     }
 }

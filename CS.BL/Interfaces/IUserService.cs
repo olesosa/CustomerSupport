@@ -8,5 +8,6 @@ namespace CS.BL.Interfaces
     {
         Task<UserDto> Create(UserSignUpDto userSignUpDto);
         Task<bool> Delete(Guid userId);
+        Task<UserDto> GetById(Guid userId);
     }
 }

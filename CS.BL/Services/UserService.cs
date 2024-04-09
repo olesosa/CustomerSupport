@@ -33,7 +33,7 @@ namespace CS.BL.Services
             await _context.SaveChangesAsync();
 
             var createdUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
-                
+
             var createdUserDto = _mapper.Map<UserDto>(createdUser);
 
             return createdUserDto;
@@ -42,17 +42,29 @@ namespace CS.BL.Services
         public async Task<bool> Delete(Guid userId)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            
+
             if (user == null)
             {
                 throw new ApiException(404, "User not found");
             }
 
             _context.Users.Remove(user);
-            
+
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<UserDto> GetById(Guid userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId); 
+            
+            if (user == null)
+            {
+                throw new ApiException(404, "User doesnt exist");
+            }
+
+            return _mapper.Map<UserDto>(user);
         }
     }
 }
