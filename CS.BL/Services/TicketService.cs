@@ -75,6 +75,11 @@ namespace CS.BL.Services
                 tickets.Where(t => t.Details.IsClosed == filter.IsClosed);
             }
 
+            if (filter.UserId.HasValue)
+            {
+                tickets.Where(t => t.CustomerId == filter.UserId);
+            }
+
             if (filter.SortDir == "asc")
             {
                 if (filter.Number.HasValue)
@@ -90,11 +95,14 @@ namespace CS.BL.Services
                 }
             }
 
-            var ticketDtos = await tickets
+            var ticketsList = await tickets
                 .Skip(filter.PageNumber)
                 .Take(filter.PageSize)
-                .Select(t => _mapper.Map<TicketShortInfoDto>(t))
                 .ToListAsync(cancellationToken);
+
+            var ticketDtos = ticketsList
+                .Select(t => _mapper.Map<TicketShortInfoDto>(t))
+                .ToList();
             
             var totalRecords = await _context.Tickets.CountAsync();
             var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
@@ -116,10 +124,11 @@ namespace CS.BL.Services
             return pagedResponse;
         }
 
-        public async Task<TicketFullInfoDto?> GetFullInfoById(Guid id, CancellationToken cancellationToken = default)
+        public async Task<TicketFullInfoDto> GetFullInfoById(Guid id, CancellationToken cancellationToken = default)
         {
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
+                .Include(t=>t.Attachments)
                 .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
             if (ticket == null)

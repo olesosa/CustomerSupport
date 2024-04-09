@@ -16,6 +16,7 @@ namespace CS.BL.Helpers
                 RequestType = ticket.RequestType,
                 Topic = ticket.Topic,
                 Description = ticket.Details.Description,
+                AttachmentIds = ticket.Attachments.Select(a=>a.Id).ToList(),
                 IsAssigned = ticket.Details.IsAssigned,
                 IsClosed =ticket.Details.IsClosed,
                 IsSolved = ticket.Details.IsSolved,

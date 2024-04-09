@@ -9,8 +9,8 @@ public class  PaginationFilter
     public bool? IsAssigned { get; set; }
     public bool? IsSolved { get; set; }
     public bool? IsClosed { get; set; }
+    public Guid? UserId { get; set; }
     // Sorting
-    
     public string SortDir { get; set; } = "asc";
     public bool? Number { get; set; }
 }
