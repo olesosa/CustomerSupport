@@ -23,7 +23,7 @@ namespace CS.API.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] PaginationFilter filter, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAll([FromQuery] TicketFilter filter, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -49,8 +49,8 @@ namespace CS.API.Controllers
             return Ok(ticket);
         }
 
-        [Authorize(Policy = "User")]
-        [HttpPost("create")]
+        [Authorize]
+        [HttpPost]
         public async Task<IActionResult> Create([FromBody] TicketCreateDto ticket)
         {
             if (!ModelState.IsValid)
@@ -58,19 +58,11 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-                var createdTicket = await _ticketService.Create(ticket, userId);
+            var createdTicket = await _ticketService.Create(ticket, userId);
 
-                return Ok(createdTicket);
-            }
-            catch
-            {
-                throw new ApiException(400, "Can not create ticket");
-            }
-
+            return Ok(createdTicket);
         }
 
         [Authorize(Policy = "Admin")]
@@ -88,7 +80,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize(Policy = "Admin")]
-        [HttpPatch("unassign/{ticketId:Guid}")]
+        [HttpPatch("UnAssign/{ticketId:Guid}")]
         public async Task<IActionResult> UnAssignTicket([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
@@ -102,7 +94,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize(Policy = "User")]
-        [HttpPatch("solve")]
+        [HttpPatch("Solve")]
         public async Task<IActionResult> MarkAsSolved([FromBody] TicketSolveDto ticketDto)
         {
             if (!ModelState.IsValid)
@@ -116,7 +108,7 @@ namespace CS.API.Controllers
         }
         
         [Authorize(Policy = "User")]
-        [HttpPatch("close")]
+        [HttpPatch("Close")]
         public async Task<IActionResult> MarkAsClosed([FromBody] TicketCloseDto ticketDto)
         {
             if (!ModelState.IsValid)

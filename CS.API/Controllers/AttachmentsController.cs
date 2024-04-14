@@ -10,7 +10,7 @@ namespace CS.API.Controllers;
 public class AttachmentsController : ControllerBase
 {
     private readonly IAttachmentService _attachmentService;
-
+    
     public AttachmentsController(IAttachmentService attachmentService)
     {
         _attachmentService = attachmentService;

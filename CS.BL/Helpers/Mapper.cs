@@ -14,11 +14,11 @@ namespace CS.BL.Helpers
             CreateMap<Ticket, TicketCreateDto>();
             CreateMap<TicketCreateDto, Ticket>();
             
-            CreateMap<User, UserSignUpDto>();
-            CreateMap<UserSignUpDto, User>();
+            CreateMap<User, UserInfoDto>();
+            CreateMap<UserInfoDto, User>();
 
-            CreateMap<SendMessageDto, Message>();
-            CreateMap<Message, SendMessageDto>();
+            CreateMap<ChatMessageDto, Message>();
+            CreateMap<Message, ChatMessageDto>();
 
             CreateMap<TicketShortInfoDto, TicketCreateDto>();
             CreateMap<TicketCreateDto, TicketShortInfoDto>();
