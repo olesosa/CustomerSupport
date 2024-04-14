@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace CS.BL.Helpers.Validators;
 
-public class UserSignUpDtoValidator: AbstractValidator<UserSignUpDto>
+public class UserSignUpDtoValidator: AbstractValidator<UserInfoDto>
 {
     public UserSignUpDtoValidator()
     {

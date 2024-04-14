@@ -45,11 +45,11 @@ namespace CS.BL.Services
                 CustomerId = dialog.Ticket.CustomerId,
                 AdminId = dialog.Ticket.AdminId,
                 Ticket = await _ticketService.GetFullInfoById(dialog.Ticket.Id, cancellationToken),
-                Messages = await _messageService.GetAllByDialogId(dialog.Id, cancellationToken),
+                Messages = await _messageService.GetAll(dialog.Id, cancellationToken),
             };
         }
 
-        public async Task<List<DialogShortInfoDto>> GetAllUserDialogs(Guid userId, string roleName)
+        public async Task<List<DialogShortInfoDto>> GetAllUserDialogs(Guid userId, string roleName, CancellationToken cancellationToken)
         {
             var dialogs = _context.Dialogs
                 .Include(d => d.Ticket)
@@ -61,14 +61,14 @@ namespace CS.BL.Services
                 case "User":
                     await dialogs
                         .Where(d => d.Ticket.AdminId == userId)
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
 
                     break;
                 
                 case "Admin":
                     await dialogs
                         .Where(d => d.Ticket.CustomerId == userId)
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
                     
                     break;
             }
@@ -96,11 +96,15 @@ namespace CS.BL.Services
             }
             
             ticket.AdminId = adminId;
-
+            
             var dialog = new Dialog()
             {
                 TicketId = ticket.Id,
             };
+
+            await _context.Dialogs.AddAsync(dialog);
+
+            await _context.SaveChangesAsync();
 
             return _customMapper.MapDialogCreate(dialog, ticket);
         }

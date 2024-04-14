@@ -1,8 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace CS.DOM.DTO
+﻿namespace CS.DOM.DTO
 {
-    public class UserSignUpDto
+    public class UserInfoDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

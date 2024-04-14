@@ -19,16 +19,16 @@ namespace CS.BL.Services
             _mapper = mapper;
         }
 
-        public async Task<UserDto> Create(UserSignUpDto userSignUpDto)
+        public async Task<UserDto> Create(UserInfoDto userInfoDto)
         {
-            var user = _mapper.Map<User>(userSignUpDto);
+            var user = _mapper.Map<User>(userInfoDto);
 
-            if (await _context.Users.AnyAsync(u => u.Email == userSignUpDto.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == userInfoDto.Email))
             {
                 throw new ApiException(400, "User already exist");
             }
 
-            await _context.AddAsync(user);
+            await _context.Users.AddAsync(user);
 
             await _context.SaveChangesAsync();
 
@@ -58,13 +58,13 @@ namespace CS.BL.Services
         public async Task<UserDto> GetById(Guid userId)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId); 
-            
-            if (user == null)
-            {
-                throw new ApiException(404, "User doesnt exist");
-            }
 
             return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<bool> IsUserExist(Guid userId)
+        {
+            return await _context.Users.AnyAsync(u => u.Id == userId);
         }
     }
 }

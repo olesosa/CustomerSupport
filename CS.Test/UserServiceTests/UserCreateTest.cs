@@ -35,7 +35,7 @@ namespace CS.Test.UserTests
         {
             // Arrange
 
-            var userDto = new UserSignUpDto()
+            var userDto = new UserInfoDto()
             {
                 Id = Guid.NewGuid(),
                 Email = "user@email.com",

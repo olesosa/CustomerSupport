@@ -11,12 +11,12 @@ namespace CS.API.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly IUserService _userSevice;
-        private static readonly string ApiIdentityAddress = ConstVariables.ApiIdentityAddress;
+        private readonly IUserService _userService;
+        private static readonly string ApiIdentityAddress = Environments.ApiIdentityAddress;
 
-        public UsersController(IUserService userSevice)
+        public UsersController(IUserService userService)
         {
-            _userSevice = userSevice;
+            _userService = userService;
         }
 
         [Authorize]
@@ -28,15 +28,15 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var userDto = new UserSignUpDto()
+            var userDto = new UserInfoDto()
             {
                 Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
                 Name = HttpContext.User.FindFirstValue(ClaimTypes.Name),
                 Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
-                RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role),
+                RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
             };
 
-            var user = await _userSevice.Create(userDto);
+            var user = await _userService.Create(userDto);
 
             return Ok(user);
         }
@@ -65,7 +65,7 @@ namespace CS.API.Controllers
                 throw new ApiException(500, "Can not delete user");
             }
 
-            await _userSevice.Delete(userId);
+            await _userService.Delete(userId);
             
             return Ok("User was deleted");
         }
@@ -79,9 +79,18 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var user = new UserInfoDto()
+            {
+                Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
+                Name = HttpContext.User.FindFirstValue(ClaimTypes.Name),
+                Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
+                RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
+            };
 
-            var user = await _userSevice.GetById(userId);
+            if (!await _userService.IsUserExist(user.Id))
+            {
+                await _userService.Create(user);
+            }
 
             return Ok(user);
         }
