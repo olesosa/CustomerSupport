@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+using CS.BL.Hubs;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
+using CS.DOM.Helpers;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
@@ -11,53 +14,31 @@ namespace CS.BL.Services
     {
         private readonly ApplicationContext _context;
         private readonly IMapper _mapper;
-        private readonly ICustomMapper _customMapper;
 
-        public MessageService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper)
+        public MessageService(ApplicationContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
-            _customMapper = customMapper;
         }
 
-        public async Task<List<MessageDto>?> GetAllByDialogId(Guid dialogId, CancellationToken cancellationToken = default)
+        public async Task<List<MessageDto>> GetAll(Guid dialogId, CancellationToken cancellationToken = default)
         {
             var messages = await _context.Messages
                 .Include(u => u.Attachments)
                 .Where(m => m.DialogId == dialogId)
                 .ToListAsync(cancellationToken);
 
-            return messages.Select(m => _customMapper.MapToMessageDto(m)).ToList();
-        }
-
-        public async Task<MessageDto?> GetById(Guid id, CancellationToken cancellationToken = default)
-        {
-            var message = await _context.Messages
-                .Include(m => m.Attachments)
-                .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
-
-            if (message == null)
+            var messageDtos = messages.Select(m => new MessageDto()
             {
-                throw new Exception("Message null ref");
-            }
+                Id = m.Id,
+                UserId = m.UserId,
+                Text = m.MessageText,
+                WhenSended = m.WhenSend,
+                UserName = _context.Users.FirstOrDefault(u=> u.Id == m.UserId).Name,
+                AttachmentIds = m.Attachments.Select(a => a.Id).ToList()
+            }).ToList();
             
-            return _customMapper.MapToMessageDto(message);
-        }
-
-        public async Task<MessageDto> SendMessage(SendMessageDto messageDto, Guid senderId)
-        {
-            var message = _mapper.Map<Message>(messageDto);
-
-            if (message == null)
-            {
-                throw new Exception("Message null ref");
-            }
-
-            message.UserId = senderId;
-            
-            await _context.Messages.AddAsync(message);
-            
-            return _customMapper.MapToMessageDto(message);
+            return messageDtos;
         }
     }
 }

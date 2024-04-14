@@ -1,6 +1,6 @@
 namespace CS.DOM.Pagination;
 
-public class  PaginationFilter
+public class  TicketFilter
 {
     public int PageNumber { get; set; }
     public int PageSize { get; set; }

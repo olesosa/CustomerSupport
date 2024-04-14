@@ -12,6 +12,8 @@
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageReference Include="MailKit" Version="4.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.27" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.0-preview.2.24128.4" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.0-preview.2.24128.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.27">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -10,17 +10,16 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CS.Api.BackgroundServices;
 using CS.BL.Helpers.Validators;
+using CS.BL.Hubs;
 using FluentValidation;
+using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add(typeof(CustomExceptionFilter));
-});
+builder.Services.AddControllers(options => { options.Filters.Add(typeof(CustomExceptionFilter)); });
 
-builder.Services.AddControllers();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IDialogService, DialogService>();
@@ -32,6 +31,8 @@ builder.Services.AddScoped<ICustomMapper, CustomMapper>();
 builder.Services.AddScoped<DataSeeder>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHostedService<BackgroundNotificationService>();
+builder.Services.AddSignalR();
+builder.Services.AddLogging();
 
 builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<TicketSolveDtoValidator>();
@@ -46,11 +47,8 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim(ClaimTypes.Role, "User")
             .RequireClaim("EmailConfirmed", "true");
     });
-    
-    options.AddPolicy("Admin", policy =>
-    {
-        policy.RequireClaim(ClaimTypes.Role, "Admin");
-    });
+
+    options.AddPolicy("Admin", policy => { policy.RequireClaim(ClaimTypes.Role, "Admin"); });
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -74,11 +72,11 @@ builder.Services.AddSwaggerGen(opt =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
-            new string[]{}
+            new string[] { }
         }
     });
 });
@@ -90,12 +88,20 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: "AllowMyOrigins", policy =>
+    options.AddPolicy(name: "AllowAllOrigins", policy =>
     {
         policy.AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
+    
+    options.AddPolicy("SignalRCors",
+        new CorsPolicyBuilder()
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .Build());
 });
 
 builder.Services.AddAuthentication(options =>
@@ -120,7 +126,8 @@ builder.Services.AddAuthentication(options =>
 
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.Zero,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Auth:SecretKey"])),
+            IssuerSigningKey =
+                new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Auth:SecretKey"])),
         };
     });
 
@@ -146,12 +153,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowMyOrigins");
+app.UseCors("SignalRCors");
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHub<DialogHub>("/hub");
 
 app.MapControllers();
 
