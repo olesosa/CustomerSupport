@@ -6,6 +6,7 @@ using CS.DOM.DTO;
 using CS.DOM.Helpers;
 using CS.DOM.Pagination;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace CS.BL.Services
 {
@@ -28,7 +29,7 @@ namespace CS.BL.Services
 
             ticket.CustomerId = userId;
 
-            await _context.AddAsync(ticket);
+            await _context.Tickets.AddAsync(ticket);
 
             var details = new TicketDetails()
             {
@@ -39,73 +40,72 @@ namespace CS.BL.Services
                 IsClosed = false,
                 TicketId = ticket.Id,
             };
-            
-            await _context.AddAsync(details);
-            
-            await _context.SaveChangesAsync();
-            
-            var createdTicket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticket.Id);
 
-            return _mapper.Map<TicketShortInfoDto>(createdTicket);
+            await _context.TicketDetails.AddAsync(details);
+
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<TicketShortInfoDto>(ticket);
         }
 
-        public async Task<PagedResponse<List<TicketShortInfoDto>>> GetAll(PaginationFilter filter,
+        public async Task<PagedResponse<List<TicketShortInfoDto>>> GetAll(TicketFilter filter,
             CancellationToken cancellationToken = default)
         {
             var tickets = _context.Tickets
-                .Include(t => t.Details);
+                .Include(t => t.Details)
+                .AsQueryable();
 
             if (filter.RequestType != null)
             {
-                tickets.Where(t => t.Details.IsAssigned);
+                tickets = tickets.Where(t => t.Details.IsAssigned);
             }
 
             if (filter.IsAssigned.HasValue)
             {
-                tickets.Where(t => t.Details.IsAssigned == filter.IsAssigned);
+                tickets = tickets.Where(t => t.Details.IsAssigned == filter.IsAssigned);
             }
 
             if (filter.IsSolved.HasValue)
             {
-                tickets.Where(t => t.Details.IsSolved == filter.IsSolved);
+                tickets = tickets.Where(t => t.Details.IsSolved == filter.IsSolved);
             }
 
             if (filter.IsClosed.HasValue)
             {
-                tickets.Where(t => t.Details.IsClosed == filter.IsClosed);
+                tickets = tickets.Where(t => t.Details.IsClosed == filter.IsClosed);
             }
 
             if (filter.UserId.HasValue)
             {
-                tickets.Where(t => t.CustomerId == filter.UserId);
+                tickets = tickets.Where(t => t.CustomerId == filter.UserId);
             }
 
             if (filter.SortDir == "asc")
             {
                 if (filter.Number.HasValue)
                 {
-                    tickets.OrderBy(t => t.Number);
+                    tickets = tickets.OrderBy(t => t.Number);
                 }
             }
             else
             {
                 if (filter.Number.HasValue)
                 {
-                    tickets.OrderByDescending(t => t.Number);
+                    tickets = tickets.OrderByDescending(t => t.Number);
                 }
             }
 
             var ticketsList = await tickets
-                .Skip(filter.PageNumber)
-                .Take(filter.PageSize)
+                .Skip(filter.Skip)
+                .Take(filter.Take)
                 .ToListAsync(cancellationToken);
 
             var ticketDtos = ticketsList
                 .Select(t => _mapper.Map<TicketShortInfoDto>(t))
                 .ToList();
-            
+
             var totalRecords = await _context.Tickets.CountAsync();
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.PageSize);
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.Take);
 
             if (ticketDtos == null)
             {
@@ -115,8 +115,8 @@ namespace CS.BL.Services
             var pagedResponse = new PagedResponse<List<TicketShortInfoDto>>
             {
                 Data = ticketDtos,
-                PageNumber = filter.PageNumber,
-                PageSize = filter.PageSize,
+                PageNumber = filter.Skip,
+                PageSize = filter.Take,
                 TotalRecords = totalRecords,
                 TotalPages = totalPages
             };
@@ -128,7 +128,7 @@ namespace CS.BL.Services
         {
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
-                .Include(t=>t.Attachments)
+                .Include(t => t.Attachments)
                 .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
             if (ticket == null)

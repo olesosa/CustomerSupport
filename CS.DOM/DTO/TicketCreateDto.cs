@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace CS.DOM.DTO
+﻿namespace CS.DOM.DTO
 {
     public class TicketCreateDto
     {

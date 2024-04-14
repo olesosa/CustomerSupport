@@ -23,20 +23,7 @@ namespace CS.BL.Helpers
                 CreationTime = ticket.Details.CreationTime
             };
         }
-
-        public MessageDto MapToMessageDto(Message message)
-        {
-            return new MessageDto()
-            {
-                Id = message.Id,
-                IsRead = message.IsRead,
-                MessageText = message.MessageText,
-                UserId = message.UserId,
-                WhenSended = message.WhenSend,
-                FilePath = message.Attachments
-                .Select(m => m.FilePath).ToList(),
-            };
-        }
+        
 
         public DialogCreateDto MapDialogCreate(Dialog dialog, Ticket ticket)
         {

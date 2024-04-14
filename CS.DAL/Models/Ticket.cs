@@ -5,7 +5,6 @@
         public int Number { get; set; }
         public string RequestType { get; set; }
         public string Topic { get; set; }
-
         
         public Guid CustomerId { get; set; }
         public User Customer { get; set; }
