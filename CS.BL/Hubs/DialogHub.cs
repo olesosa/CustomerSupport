@@ -1,12 +1,10 @@
-using CS.DOM.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace CS.BL.Hubs;
 
+[Authorize]
 public class DialogHub : Hub
 {
-    public async Task SendMessage(ChatMessageDto message)
-    {
-        await Clients.All.SendAsync("ReceiveMessage", message.Text, message.UserName);
-    }
+    
 }

@@ -50,7 +50,11 @@ public class BackgroundNotificationService : BackgroundService
 
         var tickets = await context.Tickets
             .Include(t => t.Details)
-            .Where(t => t.Details.IsAssigned && t.Details.CreationTime.AddMinutes(1) < DateTime.Now)
+            .Where(t => 
+                t.Details.IsAssigned && 
+                t.Details.CreationTime.AddMinutes(1) < DateTime.Now && 
+                t.Details.HasReceived.HasValue &&
+                t.Details.HasReceived == false)
             .ToListAsync();
 
         var tasks = tickets.Select(emailService.SendEmail);

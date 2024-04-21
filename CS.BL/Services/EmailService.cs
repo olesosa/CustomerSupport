@@ -15,6 +15,7 @@ namespace CS.BL.Services
     {
         private readonly ApplicationContext _context;
         private readonly IUserService _userService;
+        private string _frontEndUrl = Environments.FrontAddress;
 
         public EmailService(IUserService userService, ApplicationContext context)
         {
@@ -61,10 +62,10 @@ namespace CS.BL.Services
     </head>
     <body>
         <div class='container'>
-            <h1>Hello {user.Name},</h1>
+            <h1>Hello {user.UserName},</h1>
             <p>You have unread message(s) in your inbox.</p>
             <p>Message Text: {message.MessageText}</p>
-            <p>From user: {user.Name} {user.Email}</p>
+            <p>From user: {user.UserName} {user.Email}</p>
         </div>
     </body>
     </html>
@@ -96,7 +97,7 @@ namespace CS.BL.Services
                 email.To.Add(MailboxAddress.Parse(admin.Email));
                 email.Subject = "Unread message";
 
-                var bodyBuilder = new BodyBuilder(); // TODO add link when front will be ready
+                var bodyBuilder = new BodyBuilder();
                 bodyBuilder.HtmlBody = $@"
     <html>
     <head>
@@ -125,13 +126,13 @@ namespace CS.BL.Services
     </head>
     <body>
         <div class='container'>
-            <h1>Hello {admin.Name},</h1>
+            <h1>Hello {admin.UserName},</h1>
             <p>You have new ticked assigned for you</p>
             <p>Short info:</p>
             <p>Number: {ticket.Number}</p>
-            <p>RequestType: {ticket.RequestType}</p>
             <p>Topic: {ticket.Topic}</p>
             <p>Customer: {user.Email}</p>
+            <p><a href=""{$"{_frontEndUrl}tickets/{ticket.Id}"}"">Link the the ticket</a></p>
         </div>
     </body>
     </html>

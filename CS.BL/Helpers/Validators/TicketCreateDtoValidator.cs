@@ -9,7 +9,6 @@ public class TicketCreateDtoValidator : AbstractValidator<TicketCreateDto>
     {
         RuleFor(t => t.RequestType)
             .NotNull()
-            .Length(5)
             .WithMessage("Invalid Request Type");
 
         RuleFor(t => t.Topic)

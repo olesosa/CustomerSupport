@@ -4,6 +4,7 @@ using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
 using CS.DOM.Helpers;
+using CS.DOM.Pagination;
 using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
@@ -17,7 +18,7 @@ namespace CS.BL.Services
         private readonly IMessageService _messageService;
 
         public DialogService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper,
-            ITicketService ticketService, IMessageService messageService) 
+            ITicketService ticketService, IMessageService messageService)
         {
             _context = context;
             _mapper = mapper;
@@ -26,7 +27,7 @@ namespace CS.BL.Services
             _messageService = messageService;
         }
 
-        public async Task<DialogDto> GetById(Guid id, CancellationToken cancellationToken = default)
+        public async Task<DialogDto> GetById(Guid id, Guid userId, CancellationToken cancellationToken = default)
         {
             var dialog = await _context.Dialogs
                 .Include(d => d.Messages).ThenInclude(m => m.Attachments)
@@ -39,51 +40,74 @@ namespace CS.BL.Services
                 throw new ApiException(404, "Dialog not found");
             }
 
+            if (dialog.Ticket.CustomerId != userId && dialog.Ticket.AdminId != userId)
+            {
+                throw new ApiException(403, "No access to dialog");
+            }
+
             return new DialogDto()
             {
                 Id = dialog.Id,
-                CustomerId = dialog.Ticket.CustomerId,
-                AdminId = dialog.Ticket.AdminId,
                 Ticket = await _ticketService.GetFullInfoById(dialog.Ticket.Id, cancellationToken),
                 Messages = await _messageService.GetAll(dialog.Id, cancellationToken),
             };
         }
 
-        public async Task<List<DialogShortInfoDto>> GetAllUserDialogs(Guid userId, string roleName, CancellationToken cancellationToken)
+        public async Task<List<DialogShortInfoDto>> GetAllDialogs(DialogFilter filter,
+            CancellationToken cancellationToken)
         {
-            var dialogs = _context.Dialogs
+            var dialogsQuery = _context.Dialogs
                 .Include(d => d.Ticket)
                 .ThenInclude(t => t.Customer)
-                .Include(dialog => dialog.Messages);
+                .Include(dialog => dialog.Messages)
+                .Include(dialog => dialog.Ticket)
+                .ThenInclude(ticket => ticket.Admin)
+                .AsQueryable();
 
-            switch (roleName)
+            if (filter.RoleName == "User")
             {
-                case "User":
-                    await dialogs
-                        .Where(d => d.Ticket.AdminId == userId)
-                        .ToListAsync(cancellationToken);
-
-                    break;
-                
-                case "Admin":
-                    await dialogs
-                        .Where(d => d.Ticket.CustomerId == userId)
-                        .ToListAsync(cancellationToken);
-                    
-                    break;
+                dialogsQuery = dialogsQuery.Where(d => d.Ticket.CustomerId == filter.UserId);
+            }
+            else if (filter.RoleName == "Admin")
+            {
+                dialogsQuery = dialogsQuery.Where(d => d.Ticket.AdminId == filter.UserId);
+            }
+            else
+            {
+                throw new ApiException(400, "Invalid role name");
             }
 
-            if (dialogs == null)
+            if (filter.SortDir == "asc")
+            {
+                if (filter.DateTime.HasValue)
+                {
+                    dialogsQuery = dialogsQuery
+                        .OrderBy(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
+                }
+            }
+            else
+            {
+                if (filter.DateTime.HasValue)
+                {
+                    dialogsQuery = dialogsQuery
+                        .OrderByDescending(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
+                }
+            }
+
+            var dialogs = await dialogsQuery.ToListAsync(cancellationToken);
+
+            if (dialogsQuery == null)
             {
                 throw new ApiException(404, "User has no dialogs");
             }
-
-            return dialogs.Select(d => new DialogShortInfoDto()
+            
+            var dialogDto = dialogs.Select(dialog => new DialogShortInfoDto
             {
-                Id = d.Id,
-                LastMassage = d.Messages.LastOrDefault().ToString(),
-                UserName = roleName == "Admin" ? d.Ticket.Customer.Name : d.Ticket.Admin.Name
+                Id = dialog.Id,
+                LastMassage = dialog.Messages.Any() ? dialog.Messages.Last().MessageText : "No messages yet"
             }).ToList();
+
+            return dialogDto;
         }
 
         public async Task<DialogCreateDto> Create(Guid ticketId, Guid adminId)
@@ -94,9 +118,9 @@ namespace CS.BL.Services
             {
                 throw new Exception("Invalid ticket id, can not create dialog");
             }
-            
+
             ticket.AdminId = adminId;
-            
+
             var dialog = new Dialog()
             {
                 TicketId = ticket.Id,

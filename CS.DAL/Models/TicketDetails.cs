@@ -10,5 +10,6 @@
         public DateTime? AssignmentTime { get; set; }
         public bool IsSolved { get; set; }
         public bool IsClosed { get; set; }
+        public bool? HasReceived { get; set; }
     }
 }

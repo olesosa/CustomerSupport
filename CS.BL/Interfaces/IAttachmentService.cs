@@ -9,6 +9,5 @@ namespace CS.BL.Interfaces
         Task<Guid> AddMessageAttachment(IFormFile file, Guid ticketId);
         Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId);
         Task<AttachmentGetDto> GetMessageAttachment(Guid attachmentId);
-        Task<List<Guid>> GetAllDialogAttachments(Guid dialogId);
     }
 }
