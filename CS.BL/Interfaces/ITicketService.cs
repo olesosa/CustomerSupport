@@ -8,9 +8,5 @@ namespace CS.BL.Interfaces
         Task<PagedResponse<List<TicketShortInfoDto>>> GetAll(TicketFilter filter, CancellationToken cancellationToken = default);
         Task<TicketFullInfoDto> GetFullInfoById(Guid ticketId, CancellationToken cancellationToken = default);
         Task<TicketShortInfoDto> Create(TicketCreateDto ticketDto, Guid userId);
-        Task<TicketShortInfoDto> AssignTicket(Guid ticketId, Guid adminId, CancellationToken cancellationToken = default);
-        Task<TicketShortInfoDto> UnAssignTicket(Guid ticketId, CancellationToken cancellationToken = default);
-        Task<bool> IsTicketExist(Guid ticketId);
-        
     }
 }

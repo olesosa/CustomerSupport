@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
 using CS.BL.Interfaces;
 using CS.DOM.DTO;
-using CS.DOM.Helpers;
 using CS.DOM.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +27,13 @@ namespace CS.API.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            var role = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+
+            if (role == "User")
+            {
+                filter.UserId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
 
             var tickets = await _ticketService.GetAll(filter, cancellationToken);
@@ -66,57 +72,43 @@ namespace CS.API.Controllers
         }
 
         [Authorize(Policy = "Admin")]
-        [HttpPatch("assign/{ticketId:Guid}")]
-        public async Task<IActionResult> AssignTicket([FromBody] AssignTicketDto ticketDto)
+        [HttpPatch("Assign")]
+        public async Task<IActionResult> AssignTicket([FromBody] TicketAssignDto dto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var ticket = await _ticketService.AssignTicket(ticketDto.ticketId, ticketDto.adminId);
+            var details = await _detailsService.MarkAsAssigned(dto);
 
-            return Ok(ticket);
-        }
-
-        [Authorize(Policy = "Admin")]
-        [HttpPatch("UnAssign/{ticketId:Guid}")]
-        public async Task<IActionResult> UnAssignTicket([FromRoute] Guid ticketId)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var ticket = await _ticketService.UnAssignTicket(ticketId);
-
-            return Ok(ticket);
+            return Ok(details);
         }
 
         [Authorize(Policy = "User")]
-        [HttpPatch("Solve")]
-        public async Task<IActionResult> MarkAsSolved([FromBody] TicketSolveDto ticketDto)
+        [HttpPatch("Solve/{ticketId:guid}")]
+        public async Task<IActionResult> MarkAsSolved([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var details = await _detailsService.MarkAsSolved(ticketDto);
+            var details = await _detailsService.MarkAsSolved(ticketId);
             
             return Ok(details);
         }
         
         [Authorize(Policy = "User")]
-        [HttpPatch("Close")]
-        public async Task<IActionResult> MarkAsClosed([FromBody] TicketCloseDto ticketDto)
+        [HttpPatch("Close/{ticketId:guid}")]
+        public async Task<IActionResult> MarkAsClosed([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var details = await _detailsService.MarkAsClosed(ticketDto);
+            var details = await _detailsService.MarkAsClosed(ticketId);
             
             return Ok(details);
         }

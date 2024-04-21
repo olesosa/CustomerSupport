@@ -4,7 +4,8 @@ namespace CS.BL.Interfaces;
 
 public interface IDetailsService
 {
-    Task<DetailsPatchDto> MarkAsSolved(TicketSolveDto ticketDto);
-    Task<DetailsPatchDto> MarkAsClosed(TicketCloseDto ticketDto);
+    Task<TicketPatchDto> MarkAsAssigned(TicketAssignDto ticketDto);
+    Task<TicketPatchDto> MarkAsSolved(Guid ticketId);
+    Task<TicketPatchDto> MarkAsClosed(Guid ticketId);
     
 }
