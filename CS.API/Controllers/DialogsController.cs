@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using CS.DOM.Helpers;
-using Microsoft.AspNetCore.SignalR;
+using CS.DOM.Pagination;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CS.API.Controllers
 {
@@ -27,6 +28,13 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
+            var role = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "Admin")
+            {
+                throw new ApiException(403, "Not allowed to create dialog");
+            }
+            
             var adminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var dialog = await _dialogService.Create(ticketId, adminId);
@@ -36,14 +44,35 @@ namespace CS.API.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAll([FromQuery] DialogFilter filter, CancellationToken cancellationToken)
         {
-            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var roleName = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            var dialogs = await _dialogService.GetAllUserDialogs(userId, roleName, cancellationToken);
+            filter.UserId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            filter.RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+            
+            var dialogs = await _dialogService.GetAllDialogs(filter, cancellationToken);
 
             return Ok(dialogs);
+        }
+
+        [Authorize]
+        [HttpGet("{dialogId:guid}")]
+        public async Task<IActionResult> GetDialog([FromRoute] Guid dialogId, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            
+            var dialog = await _dialogService.GetById(dialogId, userId, cancellationToken);
+            
+            return Ok(dialog);
         }
     }
 }

@@ -92,15 +92,16 @@ namespace CS.BL.Services
         
         public async Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId)
         {
-            var attachment = await _context.TicketAttachments
-                .FirstOrDefaultAsync(t => t.Id == attachmentId);
+            var filePath = await _context.TicketAttachments
+                .Where(t => t.Id == attachmentId)
+                .Select(t=>t.FilePath)
+                .FirstOrDefaultAsync();
                 
-                if (attachment == null)
+                if (filePath == null)
                 {
                     throw new ApiException(404, "Ticket attachment does not exist");
                 }
                 
-                var filePath = attachment.FilePath;
                 var provider = new FileExtensionContentTypeProvider();
                 
                 if (!provider.TryGetContentType(filePath, out var contentType))
@@ -118,15 +119,16 @@ namespace CS.BL.Services
 
         public async Task<AttachmentGetDto> GetMessageAttachment(Guid attachmentId)
         {
-            var attachment = await _context.MessageAttachments
-                .FirstOrDefaultAsync(t => t.Id == attachmentId);
+            var filePath = await _context.MessageAttachments
+                .Where(m => m.Id == attachmentId)
+                .Select(m=>m.FilePath)
+                .FirstOrDefaultAsync();
                 
-            if (attachment == null)
+            if (filePath == null)
             {
                 throw new ApiException(404, "Message attachment does not exist");
             }
-                
-            var filePath = attachment.FilePath;
+            
             var provider = new FileExtensionContentTypeProvider();
                 
             if (!provider.TryGetContentType(filePath, out var contentType))
@@ -140,22 +142,6 @@ namespace CS.BL.Services
                 ContentType = contentType,
                 FilePath = Path.Combine(filePath),
             };
-        }
-
-        public async Task<List<Guid>> GetAllDialogAttachments(Guid dialogId)
-        {
-            var attachments = await _context.MessageAttachments
-                .Include(a => a.Message)
-                .Where(a => a.Message.DialogId == dialogId)
-                .Select(a => a.Id)
-                .ToListAsync();
-
-            if (attachments == null)
-            {
-                throw new ApiException(404, "No attachments to dialog");
-            }
-
-            return attachments;
         }
     }
 }

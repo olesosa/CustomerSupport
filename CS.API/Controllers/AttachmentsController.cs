@@ -17,16 +17,26 @@ public class AttachmentsController : ControllerBase
     }
 
     [HttpPost("ticket/{ticketId:Guid}")]
-    public async Task<IActionResult> AddTicketAttachment(IFormFile file, [FromRoute] Guid ticketId)
+    public async Task<IActionResult> AddTicketAttachment(List<IFormFile> files, [FromRoute] Guid ticketId)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var fileId = await _attachmentService.AddTicketAttachment(file, ticketId);
+        if (files.Count == 0)
+        {
+            return NoContent();
+        }
 
-        return Ok(fileId);
+        var filesId = new List<Guid>();
+        
+        foreach (var file in files)
+        {
+            filesId.Add(await _attachmentService.AddTicketAttachment(file, ticketId));
+        }
+        
+        return Ok(filesId);
     }
 
     [HttpGet("ticket/{attachmentId:Guid}")]
@@ -43,16 +53,26 @@ public class AttachmentsController : ControllerBase
     }
 
     [HttpPost("message/{messageId:Guid}")]
-    public async Task<IActionResult> AddMessageAttachment(IFormFile file, [FromRoute] Guid messageId)
+    public async Task<IActionResult> AddMessageAttachment(List<IFormFile> files, [FromRoute] Guid messageId)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
+        
+        if (files.Count == 0)
+        {
+            return NoContent();
+        }
 
-        var filePath = await _attachmentService.AddMessageAttachment(file, messageId);
+        var filesId = new List<Guid>();
+        
+        foreach (var file in files)
+        {
+            filesId.Add(await _attachmentService.AddMessageAttachment(file, messageId));
+        }
 
-        return Ok(filePath);
+        return Ok(filesId);
     }
 
     [HttpGet("message/{attachmentId:Guid}")]
@@ -66,18 +86,5 @@ public class AttachmentsController : ControllerBase
         var attachment = await _attachmentService.GetMessageAttachment(attachmentId);
 
         return File(attachment.FileBytes, attachment.ContentType, attachment.FilePath);
-    }
-
-    [HttpGet("{dialogId:guid}")]
-    public async Task<IActionResult> GetAll(Guid dialogId)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-        
-        var attachments = await _attachmentService.GetAllDialogAttachments(dialogId);
-
-        return Ok(attachments);
     }
 }
