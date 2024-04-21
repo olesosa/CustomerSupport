@@ -13,7 +13,7 @@ using CS.BL.Helpers.Validators;
 using CS.BL.Hubs;
 using FluentValidation;
 using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,17 +28,18 @@ builder.Services.AddScoped<IDetailsService, DetailsService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ICustomMapper, CustomMapper>();
+builder.Services.AddScoped<ISignalrService, SignalrService>();
 builder.Services.AddScoped<DataSeeder>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHostedService<BackgroundNotificationService>();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, CustomEmailProvider>();
 builder.Services.AddLogging();
 
 builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<TicketSolveDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<TicketCloseDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<SendMessageDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<UserSignUpDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ChatMessageDtoValidator>();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -48,7 +49,11 @@ builder.Services.AddAuthorization(options =>
             .RequireClaim("EmailConfirmed", "true");
     });
 
-    options.AddPolicy("Admin", policy => { policy.RequireClaim(ClaimTypes.Role, "Admin"); });
+    options.AddPolicy("Admin", policy =>
+        policy.RequireClaim(ClaimTypes.Role, "Admin"));
+
+    options.AddPolicy("Auth", policy =>
+        policy.RequireClaim("EmailConfirmed", "true"));
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -94,7 +99,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
-    
+
     options.AddPolicy("SignalRCors",
         new CorsPolicyBuilder()
             .WithOrigins("http://localhost:4200")
@@ -126,8 +131,23 @@ builder.Services.AddAuthentication(options =>
 
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.Zero,
-            IssuerSigningKey =
-                new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Auth:SecretKey"])),
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.ASCII.GetBytes(builder.Configuration["Auth:SecretKey"]))
+        };
+        options.Events = new JwtBearerEvents()
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/Hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -162,7 +182,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<DialogHub>("/hub");
+app.MapHub<DialogHub>("/Hubs");
 
 app.MapControllers();
 

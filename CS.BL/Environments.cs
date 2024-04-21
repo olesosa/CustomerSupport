@@ -1,4 +1,4 @@
-namespace CS.API;
+namespace CS.BL;
 
 public static class Environments
 {

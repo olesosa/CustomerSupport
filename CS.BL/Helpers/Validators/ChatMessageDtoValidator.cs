@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace CS.BL.Helpers.Validators;
 
-public class SendMessageDtoValidator : AbstractValidator<ChatMessageDto> // todo rewrite this
+public class ChatMessageDtoValidator : AbstractValidator<ChatMessageDto>
 {
-    public SendMessageDtoValidator()
+    public ChatMessageDtoValidator()
     {
         RuleFor(s=>s.DialogId)            
             .NotNull()
@@ -16,10 +16,5 @@ public class SendMessageDtoValidator : AbstractValidator<ChatMessageDto> // todo
             .NotEmpty()
             .MaximumLength(255)
             .WithMessage("Invalid Message");
-
-        RuleFor(s => s.WhenSend)
-            .NotEmpty()
-            .NotNull()
-            .WithMessage("Invalid date time");
     }
 }
