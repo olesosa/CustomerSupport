@@ -34,11 +34,43 @@ namespace CS.BL.Services
                 UserId = m.UserId,
                 Text = m.MessageText,
                 WhenSended = m.WhenSend,
-                UserName = _context.Users.FirstOrDefault(u=> u.Id == m.UserId).Name,
+                UserName = _context.Users.FirstOrDefault(u=> u.Id == m.UserId).UserName,
                 AttachmentIds = m.Attachments.Select(a => a.Id).ToList()
             }).ToList();
             
             return messageDtos;
+        }
+        
+        public async Task SaveMessage(ChatMessageDto messageDto, Guid userId)
+        {
+            var message = new Message()
+            {
+                DialogId = messageDto.DialogId,
+                MessageText = messageDto.Text,
+                WhenSend = DateTime.Now,
+                IsRead = false,
+                UserId = userId
+            };
+
+            await _context.Messages.AddAsync(message);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task MarkAsRead(Guid dialogId)
+        {
+            var messages = await _context.Dialogs
+                .Include(d => d.Messages)
+                .Where(d => d.Id == dialogId)
+                .SelectMany(d => d.Messages)
+                .ToListAsync();
+
+            foreach (var message in messages)
+            {
+                message.IsRead = true;
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

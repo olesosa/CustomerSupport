@@ -1,9 +1,6 @@
 ﻿using CS.BL.Interfaces;
-using CS.DOM.DTO;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
 
 namespace CS.API.Controllers
 {
@@ -18,7 +15,7 @@ namespace CS.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("messages/{dialogId:Guid}")]
+        [HttpGet("{dialogId:Guid}")]
         public async Task<IActionResult> GetAll([FromRoute] Guid dialogId, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -29,6 +26,20 @@ namespace CS.API.Controllers
             var messages = await _messageService.GetAll(dialogId, cancellationToken);
 
             return Ok(messages);
+        }
+
+        [Authorize]
+        [HttpPatch("{dialogId:Guid}")]
+        public async Task<IActionResult> ReadMessages(Guid dialogId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            await _messageService.MarkAsRead(dialogId);
+            
+            return Ok();
         }
 
     }
