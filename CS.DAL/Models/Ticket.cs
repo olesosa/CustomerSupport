@@ -1,11 +1,13 @@
-﻿namespace CS.DAL.Models
+﻿using CS.DOM;
+using CS.DOM.Enums;
+
+namespace CS.DAL.Models
 {
     public class Ticket : BaseEntity
     {
         public int Number { get; set; }
-        public string RequestType { get; set; }
+        public RequestTypes RequestType { get; set; }
         public string Topic { get; set; }
-        
         public Guid CustomerId { get; set; }
         public User Customer { get; set; }
         public Guid? AdminId { get; set; }

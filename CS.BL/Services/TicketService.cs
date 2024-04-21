@@ -6,7 +6,6 @@ using CS.DOM.DTO;
 using CS.DOM.Helpers;
 using CS.DOM.Pagination;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace CS.BL.Services
 {
@@ -54,10 +53,10 @@ namespace CS.BL.Services
             var tickets = _context.Tickets
                 .Include(t => t.Details)
                 .AsQueryable();
-
+            
             if (filter.RequestType != null)
             {
-                tickets = tickets.Where(t => t.Details.IsAssigned);
+                tickets = tickets.Where(t => t.RequestType == filter.RequestType);
             }
 
             if (filter.IsAssigned.HasValue)

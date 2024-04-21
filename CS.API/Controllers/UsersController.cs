@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using CS.DOM.Helpers;
+using Environments = CS.BL.Environments;
 
 namespace CS.API.Controllers
 {
@@ -31,7 +32,7 @@ namespace CS.API.Controllers
             var userDto = new UserInfoDto()
             {
                 Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                Name = HttpContext.User.FindFirstValue(ClaimTypes.Name),
+                UserName = HttpContext.User.FindFirstValue(ClaimTypes.Name),
                 Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
                 RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
             };
@@ -82,7 +83,7 @@ namespace CS.API.Controllers
             var user = new UserInfoDto()
             {
                 Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                Name = HttpContext.User.FindFirstValue(ClaimTypes.Name),
+                UserName = HttpContext.User.FindFirstValue(ClaimTypes.Name),
                 Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
                 RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
             };

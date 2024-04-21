@@ -1,5 +1,7 @@
 ﻿using CS.DAL.DataAccess;
 using CS.DAL.Models;
+using CS.DOM;
+using CS.DOM.Enums;
 
 namespace CS.API.Helpers
 {
@@ -65,7 +67,7 @@ namespace CS.API.Helpers
                     new Ticket()
                     {
                         Id = ticketId1,
-                        RequestType = "Payment issue",
+                        RequestType = RequestTypes.PaymentIssue,
                         Topic = "I cant buy product",
                         CustomerId = userId1,
                         AdminId = null,
@@ -73,7 +75,7 @@ namespace CS.API.Helpers
                     new Ticket()
                     {
                         Id = ticketId2,
-                        RequestType = "Web site",
+                        RequestType = RequestTypes.PaymentIssue,
                         Topic = "I found a bug",
                         CustomerId = userId2,
                         AdminId = adminId,

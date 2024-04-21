@@ -25,6 +25,9 @@ namespace CS.BL.Helpers
 
             CreateMap<UserDto, User>();
             CreateMap<User, UserDto>();
+
+            CreateMap<TicketDetails, TicketPatchDto >();
+            CreateMap<TicketPatchDto, TicketDetails>();
         }
     }
 }
