@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CS.BL.Extensions;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
@@ -50,60 +51,16 @@ namespace CS.BL.Services
         public async Task<PagedResponse<List<TicketShortInfoDto>>> GetAll(TicketFilter filter,
             CancellationToken cancellationToken = default)
         {
-            var tickets = _context.Tickets
+            var tickets = await _context.Tickets
                 .Include(t => t.Details)
-                .AsQueryable();
-            
-            if (filter.RequestType != null)
-            {
-                tickets = tickets.Where(t => t.RequestType == filter.RequestType);
-            }
+                .AsQueryable()
+                .Paginate(filter, cancellationToken);
 
-            if (filter.IsAssigned.HasValue)
-            {
-                tickets = tickets.Where(t => t.Details.IsAssigned == filter.IsAssigned);
-            }
-
-            if (filter.IsSolved.HasValue)
-            {
-                tickets = tickets.Where(t => t.Details.IsSolved == filter.IsSolved);
-            }
-
-            if (filter.IsClosed.HasValue)
-            {
-                tickets = tickets.Where(t => t.Details.IsClosed == filter.IsClosed);
-            }
-
-            if (filter.UserId.HasValue)
-            {
-                tickets = tickets.Where(t => t.CustomerId == filter.UserId);
-            }
-
-            if (filter.SortDir == "asc")
-            {
-                if (filter.Number.HasValue)
-                {
-                    tickets = tickets.OrderBy(t => t.Number);
-                }
-            }
-            else
-            {
-                if (filter.Number.HasValue)
-                {
-                    tickets = tickets.OrderByDescending(t => t.Number);
-                }
-            }
-
-            var ticketsList = await tickets
-                .Skip(filter.Skip)
-                .Take(filter.Take)
-                .ToListAsync(cancellationToken);
-
-            var ticketDtos = ticketsList
+            var ticketDtos = tickets
                 .Select(t => _mapper.Map<TicketShortInfoDto>(t))
                 .ToList();
 
-            var totalRecords = await _context.Tickets.CountAsync();
+            var totalRecords = await _context.Tickets.CountAsync(cancellationToken);
             var totalPages = (int)Math.Ceiling(totalRecords / (double)filter.Take);
 
             if (ticketDtos == null)
@@ -123,12 +80,13 @@ namespace CS.BL.Services
             return pagedResponse;
         }
 
-        public async Task<TicketFullInfoDto> GetFullInfoById(Guid id, CancellationToken cancellationToken = default)
+        public async Task<TicketFullInfoDto> GetFullInfo(int number, CancellationToken cancellationToken = default)
         {
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
                 .Include(t => t.Attachments)
-                .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+                .Include(t => t.Dialog)
+                .FirstOrDefaultAsync(t => t.Number == number, cancellationToken);
 
             if (ticket == null)
             {
@@ -137,52 +95,46 @@ namespace CS.BL.Services
 
             return _customMapper.MapToTicketFullInfo(ticket);
         }
-
-        public async Task<TicketShortInfoDto> AssignTicket(Guid ticketId, Guid adminId,
-            CancellationToken cancellationToken = default)
+        
+        public async Task<List<StatisticDto>> GetTicketsStatistic(StatisticFilter filter)
         {
-            var ticket = await _context.Tickets
-                .Include(t => t.Details)
-                .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
+            var query = _context.Tickets.AsQueryable();
 
-            if (ticket == null)
+            if (filter.UserId.HasValue)
             {
-                throw new ApiException(404, "Ticket not found");
+                query = query.Where(t => t.CustomerId == filter.UserId);
             }
 
-            ticket.AdminId = adminId;
-            ticket.Details.IsAssigned = true;
-            ticket.Details.AssignmentTime = DateTime.Now;
-
-            _context.Tickets.Update(ticket);
-
-            return _mapper.Map<TicketShortInfoDto>(ticket);
-        }
-
-        public async Task<TicketShortInfoDto> UnAssignTicket(Guid ticketId,
-            CancellationToken cancellationToken = default)
-        {
-            var ticket = await _context.Tickets
-                .Include(t => t.Details)
-                .FirstOrDefaultAsync(t => t.Id == ticketId, cancellationToken);
-
-            if (ticket == null)
+            if (filter.RequestType.HasValue)
             {
-                throw new ApiException(404, "Ticket not found");
+                query = query.Where(t => t.RequestType == filter.RequestType);
             }
 
-            ticket.AdminId = null;
-            ticket.Details.IsAssigned = false;
-            ticket.Details.AssignmentTime = null;
+            if (filter.IsAssigned.HasValue)
+            {
+                query = query.Where(t => t.Details.IsAssigned == filter.IsAssigned);
+            }
 
-            return _mapper.Map<TicketShortInfoDto>(ticket);
-        }
+            if (filter.IsSolved.HasValue)
+            {
+                query = query.Where(t => t.Details.IsSolved == filter.IsSolved);
+            }
 
-        public async Task<bool> IsTicketExist(Guid ticketId)
-        {
-            var result = await _context.Tickets.AnyAsync(t => t.Id == ticketId);
+            if (filter.IsClosed.HasValue)
+            {
+                query = query.Where(t => t.Details.IsClosed == filter.IsClosed);
+            }
 
-            return result;
+            var statistics = await query
+                .GroupBy(t => t.RequestType)
+                .Select(g => new StatisticDto
+                {
+                    RequestType = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            return statistics;
         }
     }
 }

@@ -42,15 +42,15 @@ namespace CS.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("{ticketId:guid}")]
-        public async Task<IActionResult> GetFullInfo(Guid ticketId)
+        [HttpGet("{number:int}")]
+        public async Task<IActionResult> GetFullInfo([FromRoute] int number)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var ticket = await _ticketService.GetFullInfoById(ticketId);
+            var ticket = await _ticketService.GetFullInfo(number);
 
             return Ok(ticket);
         }
@@ -71,23 +71,57 @@ namespace CS.API.Controllers
             return Ok(createdTicket);
         }
 
-        [Authorize(Policy = "Admin")]
-        [HttpPatch("Assign")]
-        public async Task<IActionResult> AssignTicket([FromBody] TicketAssignDto dto)
+        [Authorize(Roles = "User")]
+        [HttpPut("{ticketId:guid}")]
+        public async Task<IActionResult> UpdateTicket([FromBody] TicketUpdateDto ticket, [FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var details = await _detailsService.MarkAsAssigned(dto);
+            var updatedTicket = await _detailsService.UpdateTicketDetails(ticket, ticketId);
+
+            return Ok(updatedTicket);
+        }
+        
+        [Authorize(Policy = "Admin")]
+        [HttpPatch("Assign/{ticketId:guid}")]
+        public async Task<IActionResult> AssignTicket([FromRoute] Guid ticketId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var ticket = new TicketAssignDto()
+            {
+                TicketId = ticketId,
+                AdminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier))
+            };
+            
+            var details = await _detailsService.MarkAsAssigned(ticket);
 
             return Ok(details);
         }
 
+        [Authorize(Policy = "Admin")]
+        [HttpPatch("Reassign")]
+        public async Task<IActionResult> ReAssignTicket([FromBody] TicketAssignDto ticket)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var details = await _detailsService.MarkAsAssigned(ticket);
+
+            return Ok(details);
+        }
+        
         [Authorize(Policy = "User")]
         [HttpPatch("Solve/{ticketId:guid}")]
-        public async Task<IActionResult> MarkAsSolved([FromRoute] Guid ticketId)
+        public async Task<IActionResult> SolveTicket([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
@@ -101,7 +135,7 @@ namespace CS.API.Controllers
         
         [Authorize(Policy = "User")]
         [HttpPatch("Close/{ticketId:guid}")]
-        public async Task<IActionResult> MarkAsClosed([FromRoute] Guid ticketId)
+        public async Task<IActionResult> CloseTicket([FromRoute] Guid ticketId)
         {
             if (!ModelState.IsValid)
             {
@@ -111,6 +145,39 @@ namespace CS.API.Controllers
             var details = await _detailsService.MarkAsClosed(ticketId);
             
             return Ok(details);
+        }
+
+        [Authorize(Policy = "Admin")]
+        [HttpPatch("Receive/{number:int}")]
+        public async Task<IActionResult> ReceiveTicket([FromRoute] int number)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var details = await _detailsService.MarkAsReceived(number);
+
+            return Ok(details);
+        }
+
+        [Authorize]
+        [HttpGet("Statistic")]
+        public async Task<IActionResult> GetStatistic([FromQuery] StatisticFilter filter)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var role = HttpContext.User.FindFirstValue(ClaimTypes.Role);
+
+            filter.UserId = role == "User" ? userId : null;
+            
+            var statistic = await _ticketService.GetTicketsStatistic(filter);
+            
+            return Ok(statistic);
         }
         
     }
