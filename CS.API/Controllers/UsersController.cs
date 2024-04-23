@@ -95,5 +95,19 @@ namespace CS.API.Controllers
 
             return Ok(user);
         }
+        
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [HttpGet("Admins")]
+        public async Task<IActionResult> GetAdmins(CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var admins = await _userService.GetAllAdmins(cancellationToken);
+
+            return Ok(admins);
+        }
     }
 }

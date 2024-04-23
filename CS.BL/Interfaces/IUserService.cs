@@ -8,5 +8,7 @@ namespace CS.BL.Interfaces
         Task<bool> Delete(Guid userId);
         Task<UserDto> GetById(Guid userId);
         Task<bool> IsUserExist(Guid userId);
+        Task<List<UserDto>> GetAllAdmins(CancellationToken cancellationToken);
+
     }
 }

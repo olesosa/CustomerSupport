@@ -57,7 +57,7 @@ namespace CS.BL.Services
 
         public async Task<UserDto> GetById(Guid userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId); 
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             return _mapper.Map<UserDto>(user);
         }
@@ -65,6 +65,18 @@ namespace CS.BL.Services
         public async Task<bool> IsUserExist(Guid userId)
         {
             return await _context.Users.AnyAsync(u => u.Id == userId);
+        }
+
+        public async Task<List<UserDto>> GetAllAdmins(CancellationToken cancellationToken)
+        {
+            var admins = await _context.Users.Where(u => u.RoleName == "Admin").ToListAsync(cancellationToken);
+
+            if (admins == null)
+            {
+                throw new ApiException(404, "No admins found");
+            }
+
+            return admins.Select(a => _mapper.Map<UserDto>(a)).ToList();
         }
     }
 }
