@@ -7,6 +7,5 @@ namespace CS.BL.Interfaces
     {
         TicketFullInfoDto MapToTicketFullInfo(Ticket ticket);
         DialogCreateDto MapDialogCreate(Dialog dialog, Ticket ticket);
-        DetailsPatchDto MapDetails(Ticket ticket);
     }
 }
