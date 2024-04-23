@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 
-namespace CS.BL.Hubs;
+namespace CS.BL.HubProviders;
 
 public class CustomEmailProvider : IUserIdProvider
 {

@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CS.Api.BackgroundServices;
 using CS.BL.Helpers.Validators;
+using CS.BL.HubProviders;
 using CS.BL.Hubs;
 using FluentValidation;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -36,10 +37,9 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, CustomEmailProvider>();
 builder.Services.AddLogging();
 
-builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<TicketSolveDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<TicketCloseDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<ChatMessageDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
+
 
 builder.Services.AddAuthorization(options =>
 {
@@ -51,9 +51,6 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("Admin", policy =>
         policy.RequireClaim(ClaimTypes.Role, "Admin"));
-
-    options.AddPolicy("Auth", policy =>
-        policy.RequireClaim("EmailConfirmed", "true"));
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -141,7 +138,7 @@ builder.Services.AddAuthentication(options =>
                 var accessToken = context.Request.Query["access_token"];
 
                 var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/Hubs"))
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/Messages"))
                 {
                     context.Token = accessToken;
                 }
@@ -182,7 +179,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<DialogHub>("/Hubs");
+app.MapHub<DialogHub>("/Messages");
 
 app.MapControllers();
 

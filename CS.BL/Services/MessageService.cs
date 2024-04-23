@@ -1,11 +1,8 @@
 ﻿using AutoMapper;
-using CS.BL.Hubs;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
-using CS.DOM.Helpers;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace CS.BL.Services
@@ -28,25 +25,25 @@ namespace CS.BL.Services
                 .Where(m => m.DialogId == dialogId)
                 .ToListAsync(cancellationToken);
 
-            var messageDtos = messages.Select(m => new MessageDto()
+            var messagesDto = messages.Select(m => new MessageDto()
             {
-                Id = m.Id,
+                DialogId = m.DialogId,
                 UserId = m.UserId,
                 Text = m.MessageText,
                 WhenSended = m.WhenSend,
-                UserName = _context.Users.FirstOrDefault(u=> u.Id == m.UserId).UserName,
-                AttachmentIds = m.Attachments.Select(a => a.Id).ToList()
+                UserName = _context.Users.FirstOrDefault(u=> u.Id == m.UserId)!.UserName,
+                Attachments = m.Attachments.Select(a => a.Id).ToList()
             }).ToList();
             
-            return messageDtos;
+            return messagesDto;
         }
         
-        public async Task SaveMessage(ChatMessageDto messageDto, Guid userId)
+        public async Task<Message> SaveMessage(string text, Guid dialogId, Guid userId)
         {
             var message = new Message()
             {
-                DialogId = messageDto.DialogId,
-                MessageText = messageDto.Text,
+                DialogId =  dialogId,
+                MessageText = text,
                 WhenSend = DateTime.Now,
                 IsRead = false,
                 UserId = userId
@@ -55,6 +52,8 @@ namespace CS.BL.Services
             await _context.Messages.AddAsync(message);
 
             await _context.SaveChangesAsync();
+
+            return message;
         }
 
         public async Task MarkAsRead(Guid dialogId)
