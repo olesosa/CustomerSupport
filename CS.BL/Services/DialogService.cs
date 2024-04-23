@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CS.BL.Extensions;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DAL.Models;
@@ -12,16 +13,14 @@ namespace CS.BL.Services
     public class DialogService : IDialogService
     {
         private readonly ApplicationContext _context;
-        private readonly IMapper _mapper;
         private readonly ICustomMapper _customMapper;
         private readonly ITicketService _ticketService;
         private readonly IMessageService _messageService;
 
-        public DialogService(ApplicationContext context, IMapper mapper, ICustomMapper customMapper,
+        public DialogService(ApplicationContext context, ICustomMapper customMapper,
             ITicketService ticketService, IMessageService messageService)
         {
             _context = context;
-            _mapper = mapper;
             _customMapper = customMapper;
             _ticketService = ticketService;
             _messageService = messageService;
@@ -45,10 +44,20 @@ namespace CS.BL.Services
                 throw new ApiException(403, "No access to dialog");
             }
 
+            var ticket = new DialogTicketDto()
+            {
+                Id = dialog.TicketId,
+                CustomerId = dialog.Ticket.CustomerId,
+                AdminId = (Guid)dialog.Ticket.AdminId!,
+                Number = dialog.Ticket.Number,
+                Request = dialog.Ticket.RequestType,
+                Topic = dialog.Ticket.Topic
+            };
+            
             return new DialogDto()
             {
                 Id = dialog.Id,
-                Ticket = await _ticketService.GetFullInfoById(dialog.Ticket.Id, cancellationToken),
+                Ticket = ticket,
                 Messages = await _messageService.GetAll(dialog.Id, cancellationToken),
             };
         }
@@ -56,47 +65,16 @@ namespace CS.BL.Services
         public async Task<List<DialogShortInfoDto>> GetAllDialogs(DialogFilter filter,
             CancellationToken cancellationToken)
         {
-            var dialogsQuery = _context.Dialogs
+            var dialogs = await _context.Dialogs
                 .Include(d => d.Ticket)
                 .ThenInclude(t => t.Customer)
                 .Include(dialog => dialog.Messages)
                 .Include(dialog => dialog.Ticket)
                 .ThenInclude(ticket => ticket.Admin)
-                .AsQueryable();
-
-            if (filter.RoleName == "User")
-            {
-                dialogsQuery = dialogsQuery.Where(d => d.Ticket.CustomerId == filter.UserId);
-            }
-            else if (filter.RoleName == "Admin")
-            {
-                dialogsQuery = dialogsQuery.Where(d => d.Ticket.AdminId == filter.UserId);
-            }
-            else
-            {
-                throw new ApiException(400, "Invalid role name");
-            }
-
-            if (filter.SortDir == "asc")
-            {
-                if (filter.DateTime.HasValue)
-                {
-                    dialogsQuery = dialogsQuery
-                        .OrderBy(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
-                }
-            }
-            else
-            {
-                if (filter.DateTime.HasValue)
-                {
-                    dialogsQuery = dialogsQuery
-                        .OrderByDescending(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
-                }
-            }
-
-            var dialogs = await dialogsQuery.ToListAsync(cancellationToken);
-
-            if (dialogsQuery == null)
+                .AsQueryable()
+                .PaginateDialogs(filter, cancellationToken);
+            
+            if (dialogs == null)
             {
                 throw new ApiException(404, "User has no dialogs");
             }
@@ -104,7 +82,9 @@ namespace CS.BL.Services
             var dialogDto = dialogs.Select(dialog => new DialogShortInfoDto
             {
                 Id = dialog.Id,
-                LastMassage = dialog.Messages.Any() ? dialog.Messages.Last().MessageText : "No messages yet"
+                LastMassage = dialog.Messages.Any() ? dialog.Messages.Last().MessageText : "No messages yet",
+                Number = dialog.Ticket.Number,
+                IsRead = dialog.Messages.Any(m => !m.IsRead)
             }).ToList();
 
             return dialogDto;

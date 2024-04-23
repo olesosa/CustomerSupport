@@ -4,6 +4,6 @@
     {
         public Guid Id { get; set; }
         public List<MessageDto> Messages { get; set; }
-        public TicketFullInfoDto Ticket { get; set;  }
+        public DialogTicketDto Ticket { get; set;  }
     }
 }
