@@ -5,10 +5,8 @@ using CS.DAL.DataAccess;
 using CS.DAL.Models;
 using CS.DOM.DTO;
 using Moq;
-using NUnit.Framework.Constraints;
-using System.Threading;
 
-namespace CS.Test.UserTests
+namespace CS.Test.UserServiceTests
 {
     public class UserCreateTest
     {

@@ -34,15 +34,5 @@ namespace CS.BL.Helpers
                 AdminId = ticket.AdminId,
             };
         }
-
-        public DetailsPatchDto MapDetails(Ticket ticket)
-        {
-            return new DetailsPatchDto()
-            {
-                TicketId = ticket.Id,
-                IsSolved = ticket.Details.IsSolved,
-                IsClosed = ticket.Details.IsClosed,
-            };
-        }
     }
 }

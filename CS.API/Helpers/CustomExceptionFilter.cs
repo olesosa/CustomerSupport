@@ -1,4 +1,3 @@
-using System.Security.Authentication;
 using CS.DOM.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
