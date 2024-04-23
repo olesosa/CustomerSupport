@@ -17,9 +17,9 @@ public class BackgroundNotificationService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            //await CheckUnReadMessages();
-            //await CheckNewTickets();
-            
+            await CheckUnReadMessages();
+            await CheckNewTickets();
+
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
@@ -41,18 +41,18 @@ public class BackgroundNotificationService : BackgroundService
         await Task.WhenAll(tasks);
     }
 
-    public async Task CheckNewTickets()
+    private async Task CheckNewTickets()
     {
         using var scope = _scopeFactory.CreateScope();
-        
+
         var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
 
         var tickets = await context.Tickets
             .Include(t => t.Details)
-            .Where(t => 
-                t.Details.IsAssigned && 
-                t.Details.CreationTime.AddMinutes(1) < DateTime.Now && 
+            .Where(t =>
+                t.Details.IsAssigned &&
+                t.Details.CreationTime.AddMinutes(1) < DateTime.Now &&
                 t.Details.HasReceived.HasValue &&
                 t.Details.HasReceived == false)
             .ToListAsync();

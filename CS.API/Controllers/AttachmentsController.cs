@@ -17,21 +17,21 @@ public class AttachmentsController : ControllerBase
     }
 
     [HttpPost("ticket/{ticketId:Guid}")]
-    public async Task<IActionResult> AddTicketAttachment(List<IFormFile> files, [FromRoute] Guid ticketId)
+    public async Task<IActionResult> AddTicketAttachment(IFormCollection files, [FromRoute] Guid ticketId)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        if (files.Count == 0)
+        if (files.Files.Count == 0)
         {
             return NoContent();
         }
 
         var filesId = new List<Guid>();
         
-        foreach (var file in files)
+        foreach (var file in files.Files)
         {
             filesId.Add(await _attachmentService.AddTicketAttachment(file, ticketId));
         }
@@ -53,21 +53,21 @@ public class AttachmentsController : ControllerBase
     }
 
     [HttpPost("message/{messageId:Guid}")]
-    public async Task<IActionResult> AddMessageAttachment(List<IFormFile> files, [FromRoute] Guid messageId)
+    public async Task<IActionResult> AddMessageAttachment(IFormCollection files, [FromRoute] Guid messageId)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
         
-        if (files.Count == 0)
+        if (files.Files.Count == 0)
         {
             return NoContent();
         }
 
         var filesId = new List<Guid>();
         
-        foreach (var file in files)
+        foreach (var file in files.Files)
         {
             filesId.Add(await _attachmentService.AddMessageAttachment(file, messageId));
         }
