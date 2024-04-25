@@ -37,6 +37,11 @@ public class BackgroundNotificationService : BackgroundService
             .Where(t => t.WhenSend.AddMinutes(5) < DateTime.Now)
             .ToListAsync();
 
+        foreach (var message in messages)
+        {
+            message.IsRead = true;
+        }
+        
         var tasks = messages.Select(emailService.SendEmail);
         await Task.WhenAll(tasks);
     }
@@ -57,6 +62,11 @@ public class BackgroundNotificationService : BackgroundService
                 t.Details.HasReceived == false)
             .ToListAsync();
 
+        foreach (var ticket in tickets)
+        {
+            ticket.Details.HasReceived = true;
+        }
+        
         var tasks = tickets.Select(emailService.SendEmail);
         await Task.WhenAll(tasks);
     }

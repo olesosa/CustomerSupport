@@ -77,7 +77,7 @@ namespace CS.BL.Services
         <p>You have unread message(s) in your inbox.</p>
         <p>Message Text: {message.MessageText}</p>
         <p>From user: {user.UserName} ({user.Email})</p>
-        <p><button onclick=""window.location.href='{{$""{_frontEndUrl}dialogs""}}'"">Link to the ticket</button></p>
+        <p><button onclick=""window.location.href='{{$""{_frontEndUrl}dialogs""}}'"">Dialog</button></p>
     </div>
 </body>
 </html>
@@ -90,9 +90,7 @@ namespace CS.BL.Services
 
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
-
-            message.IsRead = true;
-
+            
             return true;
         }
 
@@ -155,7 +153,7 @@ namespace CS.BL.Services
         <p>Number: {ticket.Number}</p>
         <p>Topic: {ticket.Topic}</p>
         <p>Customer: {user.Email}</p>
-        <p><a href=""{_frontEndUrl}tickets/{ticket.Id}"" class=""button"">View Ticket</a></p>
+        <p><a href=""{_frontEndUrl}tickets/{ticket.Number}"" class=""button"">View Ticket</a></p>
     </div>
 </body>
 </html>
@@ -168,9 +166,7 @@ namespace CS.BL.Services
 
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
-
-            ticket.Details.HasReceived = true;
-
+            
             return true;
         }
     }

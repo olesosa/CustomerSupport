@@ -71,14 +71,14 @@ public static class QueryableExtensions
         {
             if (filter.DateTime.HasValue)
             {
-                query = query.OrderBy(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
+                query = query.OrderByDescending(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
             }
         }
         else
         {
             if (filter.DateTime.HasValue)
             {
-                query = query.OrderByDescending(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
+                query = query.OrderBy(d => d.Messages.OrderBy(m => m.WhenSend).LastOrDefault());
             }
         }
 

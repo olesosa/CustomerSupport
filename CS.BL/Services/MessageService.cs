@@ -23,6 +23,7 @@ namespace CS.BL.Services
             var messages = await _context.Messages
                 .Include(u => u.Attachments)
                 .Where(m => m.DialogId == dialogId)
+                .OrderByDescending(m => m.WhenSend)
                 .ToListAsync(cancellationToken);
 
             var messagesDto = messages.Select(m => new MessageDto()
