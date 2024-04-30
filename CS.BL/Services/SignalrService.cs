@@ -47,7 +47,7 @@ public class SignalrService : ISignalrService
         {
             foreach (var file in message.Files.Files)
             {
-                attachments.Add(await _attachmentService.AddMessageAttachment(file, sentMessage.Id));
+                attachments.Add(await _attachmentService.AddMessageAttachment(file, sentMessage.Id));//await inside of foreach. dead performance
             }
         }
         

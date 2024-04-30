@@ -39,7 +39,7 @@ namespace CS.BL.Services
             return createdUserDto;
         }
 
-        public async Task<bool> Delete(Guid userId)
+        public async Task<bool> Delete(Guid userId)//return value not used
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 

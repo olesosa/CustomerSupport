@@ -88,7 +88,7 @@ namespace CS.API.Controllers
                 RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
             };
 
-            if (!await _userService.IsUserExist(user.Id))
+            if (!await _userService.IsUserExist(user.Id))//this is very unclear. why should we create user if it doesn't exist
             {
                 await _userService.Create(user);
             }

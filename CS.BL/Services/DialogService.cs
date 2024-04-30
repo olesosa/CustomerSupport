@@ -14,7 +14,7 @@ namespace CS.BL.Services
     {
         private readonly ApplicationContext _context;
         private readonly ICustomMapper _customMapper;
-        private readonly ITicketService _ticketService;
+        private readonly ITicketService _ticketService;//not used
         private readonly IMessageService _messageService;
 
         public DialogService(ApplicationContext context, ICustomMapper customMapper,
@@ -28,7 +28,7 @@ namespace CS.BL.Services
 
         public async Task<DialogDto> GetById(Guid id, Guid userId, CancellationToken cancellationToken = default)
         {
-            var dialog = await _context.Dialogs
+            var dialog = await _context.Dialogs//some of included entities are not used. performance issue
                 .Include(d => d.Messages).ThenInclude(m => m.Attachments)
                 .Include(d => d.Ticket).ThenInclude(t => t.Details)
                 .Include(d => d.Ticket).ThenInclude(t => t.Attachments)
@@ -71,7 +71,7 @@ namespace CS.BL.Services
                 .Include(dialog => dialog.Messages)
                 .Include(dialog => dialog.Ticket)
                 .ThenInclude(ticket => ticket.Admin)
-                .AsQueryable()
+                .AsQueryable()//line not needed
                 .PaginateDialogs(filter, cancellationToken);
             
             if (dialogs == null)
@@ -79,7 +79,7 @@ namespace CS.BL.Services
                 throw new ApiException(404, "User has no dialogs");
             }
             
-            var dialogDto = dialogs.Select(dialog => new DialogShortInfoDto
+            var dialogDto = dialogs.Select(dialog => new DialogShortInfoDto//can be simplified to simple return statement
             {
                 Id = dialog.Id,
                 LastMassage = dialog.Messages.Any() ? dialog.Messages.Last().MessageText : "No messages yet",

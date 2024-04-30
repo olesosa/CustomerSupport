@@ -8,7 +8,7 @@ namespace CS.BL.Extensions;
 public static class QueryableExtensions
 {
     public static async Task<IEnumerable<Ticket>> Paginate(this IQueryable<Ticket> query,
-        TicketFilter filter, CancellationToken cancellationToken)
+        TicketFilter filter, CancellationToken cancellationToken)//can be revised using params Expression<Func<T, object>>[] filters. it will remove all if statements
     {
         if (filter.RequestType.HasValue)
         {
@@ -67,7 +67,7 @@ public static class QueryableExtensions
             _ => throw new ApiException(400, "Invalid role name")
         };
 
-        if (filter.SortDir == "asc")
+        if (filter.SortDir == "asc")//lines 70-85 can be refactored and simplified
         {
             if (filter.DateTime.HasValue)
             {

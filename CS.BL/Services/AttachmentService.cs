@@ -38,7 +38,7 @@ namespace CS.BL.Services
                 $"Attachments\\Tickets\\{ticketId.ToString()}\\",
                 fileName);
 
-            var stream = new FileStream(path, FileMode.Create);
+            var stream = new FileStream(path, FileMode.Create);//must be disposed
 
             await file.CopyToAsync(stream);
 
@@ -54,7 +54,10 @@ namespace CS.BL.Services
             return id;
         }
 
-        public async Task<Guid> AddMessageAttachment(IFormFile file, Guid messageId)
+        //method duplication. duplicates Task<Guid> AddTicketAttachment(IFormFile file, Guid ticketId)
+        //extract common logic
+        public async Task<Guid> AddMessageAttachment(IFormFile file, Guid messageId) 
+            //
         {
             var extension = "." + file.FileName.Split('.')[file.FileName.Split('.').Length - 1];
 
@@ -96,7 +99,7 @@ namespace CS.BL.Services
                 .Where(t => t.Id == attachmentId)
                 .Select(t=>t.FilePath)
                 .FirstOrDefaultAsync();
-                
+                //something wrong with tabulation
                 if (filePath == null)
                 {
                     throw new ApiException(404, "Ticket attachment does not exist");
@@ -117,6 +120,8 @@ namespace CS.BL.Services
                 };
         }
 
+        //method duplication. duplicates Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId)
+        //extract common logic
         public async Task<AttachmentGetDto> GetMessageAttachment(Guid attachmentId)
         {
             var filePath = await _context.MessageAttachments

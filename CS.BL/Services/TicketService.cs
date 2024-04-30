@@ -35,7 +35,7 @@ namespace CS.BL.Services
             {
                 Description = ticketDto.Description,
                 CreationTime = DateTime.Now,
-                IsAssigned = false,
+                IsAssigned = false,//bool is false by default. questionable assignments
                 IsSolved = false,
                 IsClosed = false,
                 TicketId = ticket.Id,
@@ -85,7 +85,7 @@ namespace CS.BL.Services
             var ticket = await _context.Tickets
                 .Include(t => t.Details)
                 .Include(t => t.Attachments)
-                .Include(t => t.Dialog)
+                .Include(t => t.Dialog)//don't see its usage later
                 .FirstOrDefaultAsync(t => t.Number == number, cancellationToken);
 
             if (ticket == null)
