@@ -6,108 +6,107 @@ using System.Security.Claims;
 using CS.DOM.Helpers;
 using Environments = CS.BL.Environments;
 
-namespace CS.API.Controllers
+namespace CS.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class UsersController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UsersController : ControllerBase
+    private readonly IUserService _userService;
+    private static readonly string ApiIdentityAddress = Environments.ApiIdentityAddress;
+
+    public UsersController(IUserService userService)
     {
-        private readonly IUserService _userService;
-        private static readonly string ApiIdentityAddress = Environments.ApiIdentityAddress;
+        _userService = userService;
+    }
 
-        public UsersController(IUserService userService)
+    [Authorize]
+    [HttpPost("sign-up")]
+    public async Task<IActionResult> SignUp()
+    {
+        if (!ModelState.IsValid)
         {
-            _userService = userService;
+            return BadRequest(ModelState);
         }
 
-        [Authorize]
-        [HttpPost("SignUp")]
-        public async Task<IActionResult> SignUp()
+        var userDto = new UserInfoDto
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
+            UserName = HttpContext.User.FindFirstValue(ClaimTypes.Name),
+            Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
+            RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
+        };
 
-            var userDto = new UserInfoDto()
-            {
-                Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                UserName = HttpContext.User.FindFirstValue(ClaimTypes.Name),
-                Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
-                RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
-            };
+        var user = await _userService.Create(userDto);
 
-            var user = await _userService.Create(userDto);
+        return Ok(user);
+    }
 
-            return Ok(user);
+    [Authorize(Policy = "User")]
+    [HttpDelete]
+    public async Task<IActionResult> DeleteUser()
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
         }
 
-        [Authorize(Policy = "User")]
-        [HttpDelete]
-        public async Task<IActionResult> DeleteUser()
+        var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        var auth = Request.Headers.Authorization;
+
+        var client = new HttpClient();
+
+        client.DefaultRequestHeaders.Add("Authorization", auth.ToString());
+
+        var response = await client.DeleteAsync($"{ApiIdentityAddress}/Users");
+
+        if (!response.IsSuccessStatusCode)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            throw new ApiException(500, "Can not delete user");
+        }
 
-            var userId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            var auth = Request.Headers.Authorization;
-
-            var client = new HttpClient();
-
-            client.DefaultRequestHeaders.Add("Authorization", auth.ToString());
-
-            var response = await client.DeleteAsync($"{ApiIdentityAddress}/Users");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new ApiException(500, "Can not delete user");
-            }
-
-            await _userService.Delete(userId);
+        await _userService.Delete(userId);
             
-            return Ok("User was deleted");
-        }
+        return Ok("User was deleted");
+    }
 
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetUser()
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetUser()
+    {
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var user = new UserInfoDto()
-            {
-                Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                UserName = HttpContext.User.FindFirstValue(ClaimTypes.Name),
-                Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
-                RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
-            };
-
-            if (!await _userService.IsUserExist(user.Id))
-            {
-                await _userService.Create(user);
-            }
-
-            return Ok(user);
+            return BadRequest(ModelState);
         }
+
+        var user = new UserInfoDto
+        {
+            Id = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)),
+            UserName = HttpContext.User.FindFirstValue(ClaimTypes.Name),
+            Email = HttpContext.User.FindFirstValue(ClaimTypes.Email),
+            RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role)
+        };
+
+        if (!await _userService.IsUserExist(user.Id))
+        {
+            await _userService.Create(user);
+        }
+
+        return Ok(user);
+    }
         
-        [Authorize(Roles = "SuperAdmin, Admin")]
-        [HttpGet("Admins")]
-        public async Task<IActionResult> GetAdmins(CancellationToken cancellationToken)
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    [HttpGet("Admins")]
+    public async Task<IActionResult> GetAdmins(CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var admins = await _userService.GetAllAdmins(cancellationToken);
-
-            return Ok(admins);
+            return BadRequest(ModelState);
         }
+
+        var admins = await _userService.GetAllAdmins(cancellationToken);
+
+        return Ok(admins);
     }
 }

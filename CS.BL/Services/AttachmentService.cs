@@ -7,141 +7,140 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 
-namespace CS.BL.Services
+namespace CS.BL.Services;
+
+public class AttachmentService : IAttachmentService
 {
-    public class AttachmentService : IAttachmentService
+    private readonly ApplicationContext _context;
+
+    public AttachmentService(ApplicationContext context)
     {
-        private readonly ApplicationContext _context;
+        _context = context;
+    }
 
-        public AttachmentService(ApplicationContext context)
+    public async Task<Guid> AddTicketAttachment(IFormFile file, Guid ticketId)
+    {
+        var extension = "." + file.FileName.Split('.')[file.FileName.Split('.').Length - 1];
+
+        var id = Guid.NewGuid();
+
+        var fileName = id + extension;
+
+        var pathBuilt = Path.Combine(Directory.GetCurrentDirectory(),
+            $"Attachments\\Tickets\\{ticketId.ToString()}\\");
+
+        if (!Directory.Exists(pathBuilt))
         {
-            _context = context;
+            Directory.CreateDirectory(pathBuilt);
         }
 
-        public async Task<Guid> AddTicketAttachment(IFormFile file, Guid ticketId)
+        var path = Path.Combine(Directory.GetCurrentDirectory(), 
+            $"Attachments\\Tickets\\{ticketId.ToString()}\\",
+            fileName);
+
+        var stream = new FileStream(path, FileMode.Create);
+
+        await file.CopyToAsync(stream);
+
+        await _context.TicketAttachments.AddAsync(new TicketAttachment()
         {
-            var extension = "." + file.FileName.Split('.')[file.FileName.Split('.').Length - 1];
+            Id = id,
+            TicketId = ticketId,
+            FilePath = path,
+        });
 
-            var id = Guid.NewGuid();
+        await _context.SaveChangesAsync(); 
 
-            string fileName = id + extension;
+        return id;
+    }
 
-            var pathBuilt = Path.Combine(Directory.GetCurrentDirectory(),
-                $"Attachments\\Tickets\\{ticketId.ToString()}\\");
+    public async Task<Guid> AddMessageAttachment(IFormFile file, Guid messageId)
+    {
+        var extension = "." + file.FileName.Split('.')[file.FileName.Split('.').Length - 1];
 
-            if (!Directory.Exists(pathBuilt))
-            {
-                Directory.CreateDirectory(pathBuilt);
-            }
+        var id = Guid.NewGuid();
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), 
-                $"Attachments\\Tickets\\{ticketId.ToString()}\\",
-                fileName);
+        var fileName = id + extension;
 
-            var stream = new FileStream(path, FileMode.Create);
+        var pathBuilt = Path.Combine(Directory.GetCurrentDirectory(),
+            $"Attachments\\Messages\\{messageId.ToString()}\\");
 
-            await file.CopyToAsync(stream);
-
-            await _context.TicketAttachments.AddAsync(new TicketAttachment()
-            {
-                Id = id,
-                TicketId = ticketId,
-                FilePath = path,
-            });
-
-            await _context.SaveChangesAsync(); 
-
-            return id;
+        if (!Directory.Exists(pathBuilt))
+        {
+            Directory.CreateDirectory(pathBuilt);
         }
 
-        public async Task<Guid> AddMessageAttachment(IFormFile file, Guid messageId)
+        var path = Path.Combine(Directory.GetCurrentDirectory(), 
+            $"Attachments\\Messages\\{messageId.ToString()}\\",
+            fileName);
+
+        var stream = new FileStream(path, FileMode.Create);
+
+        await file.CopyToAsync(stream);
+
+        await _context.MessageAttachments.AddAsync(new MessageAttachment()   
         {
-            var extension = "." + file.FileName.Split('.')[file.FileName.Split('.').Length - 1];
+            Id = id,
+            MessageId = messageId,
+            FilePath = path,
+        });
 
-            var id = Guid.NewGuid();
+        await _context.SaveChangesAsync();
 
-            string fileName = id + extension;
-
-            var pathBuilt = Path.Combine(Directory.GetCurrentDirectory(),
-                $"Attachments\\Messages\\{messageId.ToString()}\\");
-
-            if (!Directory.Exists(pathBuilt))
-            {
-                Directory.CreateDirectory(pathBuilt);
-            }
-
-            var path = Path.Combine(Directory.GetCurrentDirectory(), 
-                $"Attachments\\Messages\\{messageId.ToString()}\\",
-                fileName);
-
-            var stream = new FileStream(path, FileMode.Create);
-
-            await file.CopyToAsync(stream);
-
-            await _context.MessageAttachments.AddAsync(new MessageAttachment()   
-            {
-                Id = id,
-                MessageId = messageId,
-                FilePath = path,
-            });
-
-            await _context.SaveChangesAsync();
-
-            return id;
-        }
+        return id;
+    }
         
-        public async Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId)
+    public async Task<AttachmentGetDto> GetTicketAttachment(Guid attachmentId)
+    {
+        var filePath = await _context.TicketAttachments
+                                     .Where(t => t.Id == attachmentId)
+                                     .Select(t=>t.FilePath)
+                                     .FirstOrDefaultAsync();
+                
+        if (filePath == null)
         {
-            var filePath = await _context.TicketAttachments
-                .Where(t => t.Id == attachmentId)
-                .Select(t=>t.FilePath)
-                .FirstOrDefaultAsync();
+            throw new ApiException(404, "Ticket attachment does not exist");
+        }
                 
-                if (filePath == null)
-                {
-                    throw new ApiException(404, "Ticket attachment does not exist");
-                }
+        var provider = new FileExtensionContentTypeProvider();
                 
-                var provider = new FileExtensionContentTypeProvider();
-                
-                if (!provider.TryGetContentType(filePath, out var contentType))
-                {
-                    contentType = "application/octet-stream";
-                }
-
-                return new AttachmentGetDto()
-                {
-                    FileBytes = await File.ReadAllBytesAsync(filePath),
-                    ContentType = contentType,
-                    FilePath = Path.Combine(filePath),
-                };
+        if (!provider.TryGetContentType(filePath, out var contentType))
+        {
+            contentType = "application/octet-stream";
         }
 
-        public async Task<AttachmentGetDto> GetMessageAttachment(Guid attachmentId)
+        return new AttachmentGetDto()
         {
-            var filePath = await _context.MessageAttachments
-                .Where(m => m.Id == attachmentId)
-                .Select(m=>m.FilePath)
-                .FirstOrDefaultAsync();
+            FileBytes = await File.ReadAllBytesAsync(filePath),
+            ContentType = contentType,
+            FilePath = Path.Combine(filePath),
+        };
+    }
+
+    public async Task<AttachmentGetDto> GetMessageAttachment(Guid attachmentId)
+    {
+        var filePath = await _context.MessageAttachments
+                                     .Where(m => m.Id == attachmentId)
+                                     .Select(m=>m.FilePath)
+                                     .FirstOrDefaultAsync();
                 
-            if (filePath == null)
-            {
-                throw new ApiException(404, "Message attachment does not exist");
-            }
+        if (filePath == null)
+        {
+            throw new ApiException(404, "Message attachment does not exist");
+        }
             
-            var provider = new FileExtensionContentTypeProvider();
+        var provider = new FileExtensionContentTypeProvider();
                 
-            if (!provider.TryGetContentType(filePath, out var contentType))
-            {
-                contentType = "application/octet-stream";
-            }
-
-            return new AttachmentGetDto()
-            {
-                FileBytes = await File.ReadAllBytesAsync(filePath),
-                ContentType = contentType,
-                FilePath = Path.Combine(filePath),
-            };
+        if (!provider.TryGetContentType(filePath, out var contentType))
+        {
+            contentType = "application/octet-stream";
         }
+
+        return new AttachmentGetDto()
+        {
+            FileBytes = await File.ReadAllBytesAsync(filePath),
+            ContentType = contentType,
+            FilePath = Path.Combine(filePath),
+        };
     }
 }

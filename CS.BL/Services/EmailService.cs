@@ -14,7 +14,7 @@ namespace CS.BL.Services
     public class EmailService : IEmailService
     {
         private readonly IServiceScopeFactory _scopeFactory;
-        private string _frontEndUrl = Environments.FrontAddress;
+        private readonly string _frontEndUrl = Environments.FrontAddress;
 
         public EmailService(IServiceScopeFactory scopeFactory)
         {
@@ -27,7 +27,8 @@ namespace CS.BL.Services
 
             var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
             
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == message.UserId);
+            var user = await context.Users.FirstAsync(u => u.Id == message.UserId);
+
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse("alexbobr1337@gmail.com"));
             email.To.Add(MailboxAddress.Parse(user.Email));
@@ -100,8 +101,8 @@ namespace CS.BL.Services
 
             var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
             
-            var admin = await context.Users.FirstOrDefaultAsync(u => u.Id == ticket.AdminId);
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == ticket.CustomerId);
+            var admin = await context.Users.FirstAsync(u => u.Id == ticket.AdminId);
+            var user = await context.Users.FirstAsync(u => u.Id == ticket.CustomerId);
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse("alexbobr1337@gmail.com"));
             email.To.Add(MailboxAddress.Parse(admin.Email));

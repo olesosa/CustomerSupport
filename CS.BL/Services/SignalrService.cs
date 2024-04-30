@@ -3,8 +3,8 @@ using CS.BL.Hubs;
 using CS.BL.Interfaces;
 using CS.DAL.DataAccess;
 using CS.DOM.DTO;
+using CS.DOM.Enums;
 using CS.DOM.Helpers;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,7 +37,9 @@ public class SignalrService : ISignalrService
             throw new ApiException(404, "Dialog not found");
         }
 
-        var receiverId = user.RoleName == "User" ? dialog.Ticket.AdminId : dialog.Ticket.CustomerId;
+        var receiverId = user.RoleName == UserRoles.User 
+            ? dialog.Ticket.AdminId 
+            : dialog.Ticket.CustomerId;
         
         var sentMessage = await _messageService.SaveMessage(message.Text, dialogId, user.Id);
 

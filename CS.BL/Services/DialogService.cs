@@ -14,15 +14,13 @@ namespace CS.BL.Services
     {
         private readonly ApplicationContext _context;
         private readonly ICustomMapper _customMapper;
-        private readonly ITicketService _ticketService;
         private readonly IMessageService _messageService;
 
         public DialogService(ApplicationContext context, ICustomMapper customMapper,
-            ITicketService ticketService, IMessageService messageService)
+            IMessageService messageService)
         {
             _context = context;
             _customMapper = customMapper;
-            _ticketService = ticketService;
             _messageService = messageService;
         }
 

@@ -4,6 +4,7 @@ using CS.DOM.DTO;
 
 namespace CS.BL.Helpers
 {
+    //TODO: Why not automapper?
     public class CustomMapper : ICustomMapper
     {
         public TicketFullInfoDto MapToTicketFullInfo(Ticket ticket)

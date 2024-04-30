@@ -5,72 +5,69 @@ using CS.DAL.Models;
 using CS.DOM.DTO;
 using Microsoft.EntityFrameworkCore;
 
-namespace CS.BL.Services
+namespace CS.BL.Services;
+
+public class MessageService : IMessageService
 {
-    public class MessageService : IMessageService
+    private readonly ApplicationContext _context;
+
+    public MessageService(ApplicationContext context)
     {
-        private readonly ApplicationContext _context;
-        private readonly IMapper _mapper;
+        _context = context;
+    }
 
-        public MessageService(ApplicationContext context, IMapper mapper)
+    public async Task<List<MessageDto>> GetAll(Guid dialogId, CancellationToken cancellationToken = default)
+    {
+        var messages = await _context.Messages
+                                     .Include(u => u.Attachments)
+                                     .Where(m => m.DialogId == dialogId)
+                                     .OrderByDescending(m => m.WhenSend)
+                                     .ToListAsync(cancellationToken);
+
+        var messagesDto = messages.Select(m => new MessageDto()
         {
-            _context = context;
-            _mapper = mapper;
-        }
-
-        public async Task<List<MessageDto>> GetAll(Guid dialogId, CancellationToken cancellationToken = default)
-        {
-            var messages = await _context.Messages
-                .Include(u => u.Attachments)
-                .Where(m => m.DialogId == dialogId)
-                .OrderByDescending(m => m.WhenSend)
-                .ToListAsync(cancellationToken);
-
-            var messagesDto = messages.Select(m => new MessageDto()
-            {
-                DialogId = m.DialogId,
-                UserId = m.UserId,
-                Text = m.MessageText,
-                WhenSended = m.WhenSend,
-                UserName = _context.Users.FirstOrDefault(u=> u.Id == m.UserId)!.UserName,
-                Attachments = m.Attachments.Select(a => a.Id).ToList()
-            }).ToList();
+            DialogId = m.DialogId,
+            UserId = m.UserId,
+            Text = m.MessageText,
+            WhenSended = m.WhenSend,
+            UserName = _context.Users.FirstOrDefault(u=> u.Id == m.UserId)!.UserName,
+            Attachments = m.Attachments.Select(a => a.Id).ToList()
+        }).ToList();
             
-            return messagesDto;
-        }
+        return messagesDto;
+    }
         
-        public async Task<Message> SaveMessage(string text, Guid dialogId, Guid userId)
+    public async Task<Message> SaveMessage(string text, Guid dialogId, Guid userId)
+    {
+        var message = new Message()
         {
-            var message = new Message()
-            {
-                DialogId =  dialogId,
-                MessageText = text,
-                WhenSend = DateTime.Now,
-                IsRead = false,
-                UserId = userId
-            };
+            DialogId =  dialogId,
+            MessageText = text,
+            WhenSend = DateTime.Now,
+            IsRead = false,
+            UserId = userId
+        };
 
-            await _context.Messages.AddAsync(message);
+        await _context.Messages.AddAsync(message);
 
-            await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-            return message;
+        return message;
+    }
+
+    public async Task MarkAsRead(Guid dialogId)
+    {
+        var messages = await _context.Dialogs
+                                     .Include(d => d.Messages)
+                                     .Where(d => d.Id == dialogId)
+                                     .SelectMany(d => d.Messages)
+                                     .ToListAsync();
+
+        foreach (var message in messages)
+        {
+            message.IsRead = true;
         }
 
-        public async Task MarkAsRead(Guid dialogId)
-        {
-            var messages = await _context.Dialogs
-                .Include(d => d.Messages)
-                .Where(d => d.Id == dialogId)
-                .SelectMany(d => d.Messages)
-                .ToListAsync();
-
-            foreach (var message in messages)
-            {
-                message.IsRead = true;
-            }
-
-            await _context.SaveChangesAsync();
-        }
+        await _context.SaveChangesAsync();
     }
 }
