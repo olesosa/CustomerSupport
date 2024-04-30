@@ -1,7 +1,6 @@
 ﻿using CS.DAL.DataAccess.Configurations;
 using CS.DAL.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CS.DAL.DataAccess
 {

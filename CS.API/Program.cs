@@ -12,6 +12,7 @@ using CS.Api.BackgroundServices;
 using CS.BL.Helpers.Validators;
 using CS.BL.HubProviders;
 using CS.BL.Hubs;
+using CS.DOM.Enums;
 using FluentValidation;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.SignalR;
@@ -45,12 +46,12 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("User", policy =>
     {
-        policy.RequireClaim(ClaimTypes.Role, "User")
+        policy.RequireClaim(ClaimTypes.Role, UserRoles.User)
             .RequireClaim("EmailConfirmed", "true");
     });
 
     options.AddPolicy("Admin", policy =>
-        policy.RequireClaim(ClaimTypes.Role, "Admin"));
+        policy.RequireClaim(ClaimTypes.Role, UserRoles.Admin));
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -151,17 +152,17 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 if (args.Length == 1 && args[0].ToLower() == "seeddata")
+{
     SeedData(app);
+}
 
 void SeedData(IHost app)
 {
-    var scopedFactory = app.Services.GetService<IServiceScopeFactory>();
+    var scopedFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
 
-    using (var scope = scopedFactory.CreateScope())
-    {
-        var service = scope.ServiceProvider.GetService<DataSeeder>();
-        service.SeedAllData();
-    }
+    using var scope = scopedFactory.CreateScope();
+    var service = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+    service.SeedAllData();
 }
 
 if (app.Environment.IsDevelopment())

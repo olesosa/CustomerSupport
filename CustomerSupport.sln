@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS.BL", "CS.BL\CS.BL.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS.DOM", "CS.DOM\CS.DOM.csproj", "{B92269C8-72BA-441F-B4A4-673A56B1056E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CS.Security", "..\..\Security\Security\CS.Security\CS.Security.csproj", "{3A812500-3ABD-4462-88FD-C231272D98CE}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{B92269C8-72BA-441F-B4A4-673A56B1056E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B92269C8-72BA-441F-B4A4-673A56B1056E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B92269C8-72BA-441F-B4A4-673A56B1056E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3A812500-3ABD-4462-88FD-C231272D98CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3A812500-3ABD-4462-88FD-C231272D98CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3A812500-3ABD-4462-88FD-C231272D98CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3A812500-3ABD-4462-88FD-C231272D98CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

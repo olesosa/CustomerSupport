@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using CS.BL.Interfaces;
 using CS.DOM.DTO;
+using CS.DOM.Enums;
 using CS.DOM.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,7 @@ namespace CS.API.Controllers
 
             var role = HttpContext.User.FindFirstValue(ClaimTypes.Role);
 
-            if (role == "User")
+            if (role == UserRoles.User)
             {
                 filter.UserId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
@@ -94,7 +95,7 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var ticket = new TicketAssignDto()
+            var ticket = new TicketAssignDto
             {
                 TicketId = ticketId,
                 AdminId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier))

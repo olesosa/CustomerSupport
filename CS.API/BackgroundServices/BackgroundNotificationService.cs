@@ -43,6 +43,8 @@ public class BackgroundNotificationService : BackgroundService
         }
         
         var tasks = messages.Select(emailService.SendEmail);
+        
+        //TODO: save changes seems to be missing here
         await Task.WhenAll(tasks);
     }
 
@@ -68,6 +70,8 @@ public class BackgroundNotificationService : BackgroundService
         }
         
         var tasks = tickets.Select(emailService.SendEmail);
+        
+        //TODO: save changes seems to be missing here
         await Task.WhenAll(tasks);
     }
 }
