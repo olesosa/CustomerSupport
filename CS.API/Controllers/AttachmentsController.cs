@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CS.API.Controllers;
 
+//unclear schema naming but questionable
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
@@ -33,7 +34,7 @@ public class AttachmentsController : ControllerBase
         
         foreach (var file in files.Files)
         {
-            filesId.Add(await _attachmentService.AddTicketAttachment(file, ticketId));
+            filesId.Add(await _attachmentService.AddTicketAttachment(file, ticketId));//await inside of foreach. dead performance
         }
         
         return Ok(filesId);
@@ -69,7 +70,7 @@ public class AttachmentsController : ControllerBase
         
         foreach (var file in files.Files)
         {
-            filesId.Add(await _attachmentService.AddMessageAttachment(file, messageId));
+            filesId.Add(await _attachmentService.AddMessageAttachment(file, messageId));//await inside of foreach. dead performance
         }
 
         return Ok(filesId);

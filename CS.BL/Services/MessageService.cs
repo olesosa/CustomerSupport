@@ -10,7 +10,7 @@ namespace CS.BL.Services
     public class MessageService : IMessageService
     {
         private readonly ApplicationContext _context;
-        private readonly IMapper _mapper;
+        private readonly IMapper _mapper;//not used
 
         public MessageService(ApplicationContext context, IMapper mapper)
         {
@@ -26,7 +26,7 @@ namespace CS.BL.Services
                 .OrderByDescending(m => m.WhenSend)
                 .ToListAsync(cancellationToken);
 
-            var messagesDto = messages.Select(m => new MessageDto()
+            var messagesDto = messages.Select(m => new MessageDto()//can be simplified to simple return
             {
                 DialogId = m.DialogId,
                 UserId = m.UserId,

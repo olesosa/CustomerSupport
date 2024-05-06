@@ -35,6 +35,7 @@ namespace CS.BL.Services
 
             email.Body = email.Body = new TextPart(TextFormat.Html)
             {
+                //better extract to separate html file
                 Text = $@"
 <!DOCTYPE html>
 <html lang=""en"">
@@ -86,7 +87,7 @@ namespace CS.BL.Services
 
             using var smtp = new SmtpClient();
             await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync("alexbobr1337@gmail.com", "hklu emus pdgn dpxk");
+            await smtp.AuthenticateAsync("alexbobr1337@gmail.com", "hklu emus pdgn dpxk");//not safe to store creds here
 
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
@@ -109,6 +110,7 @@ namespace CS.BL.Services
 
             email.Body = email.Body = new TextPart(TextFormat.Html)
             {
+                //better extract to separate html file
                 Text = $@"
 <!DOCTYPE html>
 <html lang=""en"">

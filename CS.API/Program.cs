@@ -38,7 +38,7 @@ builder.Services.AddSingleton<IUserIdProvider, CustomEmailProvider>();
 builder.Services.AddLogging();
 
 builder.Services.AddValidatorsFromAssemblyContaining<ChatMessageDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<TicketCreateDtoValidator>();//redundant call
 
 
 builder.Services.AddAuthorization(options =>

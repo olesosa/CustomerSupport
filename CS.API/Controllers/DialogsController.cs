@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using CS.DOM.Helpers;
 using CS.DOM.Pagination;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.ChangeTracking;//unused using statements
 
 namespace CS.API.Controllers
 {
@@ -28,6 +28,7 @@ namespace CS.API.Controllers
                 return BadRequest(ModelState);
             }
 
+            //business logic inside of controller. consider moving into custom filter 
             var role = HttpContext.User.FindFirstValue(ClaimTypes.Role);
 
             if (role != "Admin")
@@ -50,7 +51,7 @@ namespace CS.API.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+            //here is the problem. DialogFilter contains property Id which can be set by http request and instantly overwritten. consider making dto
             filter.UserId = Guid.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             filter.RoleName = HttpContext.User.FindFirstValue(ClaimTypes.Role);
             

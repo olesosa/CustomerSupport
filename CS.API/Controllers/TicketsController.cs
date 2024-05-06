@@ -68,7 +68,7 @@ namespace CS.API.Controllers
 
             var createdTicket = await _ticketService.Create(ticket, userId);
 
-            return Ok(createdTicket);
+            return Ok(createdTicket);//better use CreatedAt for create methods
         }
 
         [Authorize(Roles = "User")]
